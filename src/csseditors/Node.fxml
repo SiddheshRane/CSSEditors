@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<fx:root prefHeight="233.0" prefWidth="216.0" styleClass="node-css" stylesheets="@csseditors.css" type="AnchorPane" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
+   <children>
+      <GridPane alignment="CENTER" hgap="6.0" layoutX="51.0" layoutY="50.0" prefHeight="400.0" prefWidth="420.0" vgap="6.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <columnConstraints>
+            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="114.0" minWidth="74.0" prefWidth="74.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="155.0" minWidth="10.0" prefWidth="116.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <Label layoutX="58.0" layoutY="54.0" text="Blend Mode" />
+            <Label layoutX="52.0" layoutY="167.0" text="Translate Y" GridPane.rowIndex="3" />
+            <TextField fx:id="tx" layoutX="143.0" layoutY="130.0" prefColumnCount="2" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <CheckBox fx:id="visible" layoutX="146.0" layoutY="95.0" mnemonicParsing="false" prefHeight="17.0" prefWidth="6.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Label layoutX="54.0" layoutY="206.0" text="Rotate" GridPane.rowIndex="4" />
+            <Label layoutX="65.0" layoutY="95.0" text="Visible" GridPane.rowIndex="1" />
+            <Label layoutX="53.0" layoutY="131.0" text="Translate X" GridPane.rowIndex="2" />
+            <TextField fx:id="rotate" layoutX="143.0" layoutY="205.0" prefColumnCount="2" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Label layoutX="51.0" layoutY="254.0" text="Opacity" GridPane.rowIndex="5" />
+            <TextField fx:id="ty" layoutX="143.0" layoutY="166.0" prefColumnCount="2" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <ComboBox fx:id="blend" layoutX="149.0" layoutY="50.0" prefWidth="150.0" GridPane.columnIndex="1" />
+            <Slider fx:id="opacity" layoutX="140.0" layoutY="256.0" max="1.0" value="1.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+         </children>
+         <padding>
+            <Insets left="10.0" right="10.0" />
+         </padding>
+      </GridPane>
+   </children>
+</fx:root>

@@ -1,0 +1,100 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/*
+    Created on : Oct 4, 2014, 7:44:04 PM
+    Author     : Siddhesh
+*/
+
+.node-css { -fx-background-color : white;}
+
+
+.node-css .text-field , .node-css .combo-box{
+    -fx-background-color : white ;
+    -fx-backgroundinsets : 0;
+    -fx-background-radius:0;
+
+    -fx-border-color:#f48eed;
+    -fx-border-radius : 0;
+
+    -fx-padding : 0;
+}
+
+
+
+
+.node-css .text-field:focused {
+    -fx-border-color:#f212e3;
+    -fx-border-width : 2;
+    -fx-padding : -1;
+}
+
+.node-css .check-box .box {
+    -fx-background-color : white ;
+    -fx-backgroundinsets : 0;
+    -fx-background-radius:0;
+
+    -fx-border-color:#f48eed;
+    -fx-border-radius : 0;
+
+    -fx-padding : 0;
+
+}
+
+.node-css .preview {
+
+    -fx-border-color: #f48eed;
+}
+
+.cornerRadiiArc {
+
+    -fx-fill : transparent;
+    -fx-stroke:#ee39e2;
+    -fx-stroke-type : inside;
+    -fx-stroke-width : 0.2;
+    -fx-opacity : 0.5;
+    -fx-blend-mode : src-over;
+
+}
+
+.cornerRadiiArc:hover {
+    -fx-opacity : 1;
+    -fx-fill : aqua;
+}
+
+.cornerRects {
+    -fx-fill : #ff0033;
+    -fx-stroke-width:0;
+}
+
+.experimental {
+
+    -fx-background-color : #b8d5ed;
+    -fx-background-radius: 0%;
+    -fx-color-label-visible: false;
+
+}
+.experimental .arrow-button{
+    visibility:hidden;
+    -fx-background-color:green;
+    -fx-background-radius: 0% 50% 50% 0%;
+
+}
+
+.experimental .color-picker-label {
+
+    -fx-graphic-text-gap: 0px;
+    -fx-padding: 0px;
+    -fx-alignment: center-left;
+}
+.experimental .picker-color-rect {
+
+    -fx-arc-width: 10;
+    -fx-arc-height: 10;
+}
+
+.gradient-test {
+    -fx-background-color: linear-gradient(from 0% 0% to 50% 50% , wheat , blueviolet);
+}

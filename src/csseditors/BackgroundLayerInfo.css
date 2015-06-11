@@ -1,0 +1,59 @@
+
+/* 
+    Created on : Jun 22, 2014, 7:09:59 PM
+    Author     : Siddhesh
+*/
+
+
+
+
+.inset .text-field {
+    -fx-background-color : white ;
+    -fx-backgroundinsets : 0;
+    -fx-background-radius:0;
+
+    -fx-border-color:#f48eed;
+    -fx-border-radius : 0;
+
+    -fx-padding : 0;
+}
+
+
+
+
+.inset .text-field:focused {
+    -fx-border-color:#f212e3;
+    -fx-border-width : 2;
+}
+
+
+.slider {
+
+    -fx-background-color:#a6dde7;
+    
+
+}
+.slider .track{
+    -fx-background-color: #f48eed , white ;
+    -fx-background-insets : 0 , 1;
+    -fx-background-radius:0 , 0;
+
+
+
+}
+.slider .thumb{
+    -fx-background-color: #f48eed , white ;
+    -fx-background-insets : 0 , 1;
+    -fx-background-radius:0;
+    
+
+}
+
+.slider .thumb:hover {
+    -fx-background-insets : 0 , 2;
+}
+
+
+
+
+

@@ -1,0 +1,162 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Dec 20, 2014, 6:21:48 PM
+    Author     : Siddhesh
+*/
+
+.end {
+    -fx-pref-width : 10;
+    -fx-pref-height:10;
+    -fx-border-color : black;
+    -fx-border-radius: 10;
+    -fx-background-color:whitesmoke;
+    -fx-background-radius : 10;
+    visibility: hidden;
+}
+
+.start {
+    -fx-pref-width : 10;
+    -fx-pref-height:10;
+    -fx-border-color : black;
+    -fx-border-radius: 10;
+    -fx-background-color:whitesmoke;
+    -fx-background-radius : 10;
+    visibility: hidden;
+
+}
+.stop{
+    -fx-border-color:black;
+    -fx-border-radius: 12;
+    -fx-pref-width:10;
+    -fx-pref-height:10;
+    //-fx-scale-x : 0.5;
+    //-fx-scale-y : 0.5;
+}
+
+.stop:disabled {
+    -fx-border-color : grey;
+
+}
+.line {
+    -fx-stroke : black;
+    -fx-snap-to-pixel : true;
+}
+.line:disabled{
+    -fx-stroke : grey;
+
+}
+.unit-box{
+    -fx-padding : 5;
+    -fx-border-color:coral;
+    -fx-border-insets: 0  ;
+    -fx-border-radius: 0 ;
+}
+
+.cycle-method {
+
+}
+.cycle-method-label {
+    -fx-text-alignment: left;
+}
+.cycle-method-hbox {
+    -fx-spacing: 5;
+    -fx-alignment: center;
+}
+
+.lge{
+    -fx-border-color : lavenderblush;
+    -fx-spacing : 5;
+}
+
+
+//FOR RGE
+
+.center {
+    -fx-pref-width : 6;
+    -fx-pref-height:6;
+    //-fx-border-color : black;
+    //-fx-border-radius: 10;
+    -fx-background-color:black;
+    -fx-background-radius : 10;
+}
+
+.focus {
+    -fx-pref-width : 10;
+    -fx-pref-height:10;
+    -fx-border-color : black;
+    -fx-border-radius: 10;
+    -fx-background-color:whitesmoke;
+    -fx-background-radius : 10;
+}
+.radius {
+    -fx-pref-width : 10;
+    -fx-pref-height:10;
+    -fx-border-color : black;
+    -fx-border-radius: 10;
+    -fx-background-color:whitesmoke;
+    -fx-background-radius : 10;
+}
+.add {
+    -fx-pref-width : 10;
+    -fx-pref-height:10;
+    -fx-border-color : red;
+    -fx-border-radius: 10;
+    -fx-background-color:white;
+    -fx-background-radius : 10;
+}
+
+.cross-mark{
+    -fx-shape : "M0 0 L 12 12 M 12 0 L 0 12";
+    -fx-border-color : whitesmoke;
+    -fx-border-width: 2;
+}
+
+.cross{
+    -fx-background-color: #ff6644;
+    -fx-shape: "M 0,0 H1 L 4,3 7,0 H8 V1 L 5,4 8,7 V8 H7 L 4,5 1,8 H0 V7 L 3,4 0,1 Z";
+    -fx-scale-shape: false;
+    -fx-effect: dropshadow(two-pass-box , rgba(255, 255, 255, 0.4), 1, 0.0 , 0, 1);
+    -fx-padding:2;
+}
+.cross:hover{
+    -fx-background-color :#ff0033 ;
+}
+.cell-hbox{
+    -fx-spacing:4;
+    -fx-alignment:CENTER_LEFT;
+}
+.offset{
+    -fx-min-width : 40px;
+}
+
+/*Color Picker Styling*/
+.stop-color {
+    -fx-color-label-visible:true;
+    -fx-color-rect-height:12;
+    -fx-color-rect-width : 20;
+    -fx-background-color: transparent;
+    -fx-min-width  :20;
+
+    // -fx-border-color: greenyellow;
+}
+.color-picker .color-picker-label{
+    -fx-padding: 0;
+    -fx-content-display: left;
+    -fx-graphic-text-gap: 5;
+}
+.color-picker > .arrow-button {
+    visibility: hidden;
+    -fx-padding: 0;
+
+}
+.color-picker > .arrow-button >.arrow {
+    -fx-padding: 0;
+}
+.picker-color-rect {
+    -fx-arc-width : 12;
+    -fx-arc-height : 12;
+}
