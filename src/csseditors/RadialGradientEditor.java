@@ -47,6 +47,7 @@ public class RadialGradientEditor extends GradientEditor {
     Slider sRadius, sFocus, sFocusAngle;
 
     double mouseOffset;
+    double mouseX , mouseY;
     boolean stopSelected;
     //true if the value of any Slider was set from code
     //false if human interaction with GUI
@@ -194,7 +195,7 @@ public class RadialGradientEditor extends GradientEditor {
             return D;
         }
 
-        return 1.0;
+        return -1.0;
     }
 
     private double getNormalisedOffset(double D) {
@@ -276,6 +277,10 @@ public class RadialGradientEditor extends GradientEditor {
         sRadius.valueProperty().addListener(controlListener);
         sFocus.valueProperty().addListener(controlListener);
         sFocusAngle.valueProperty().addListener(controlListener);
+        
+        sRadius.setBlockIncrement(0.1);
+        sFocus.setBlockIncrement(0.1);
+        
 
     }
 
@@ -314,7 +319,7 @@ public class RadialGradientEditor extends GradientEditor {
     EventHandler<MouseEvent> moved = (MouseEvent event) -> {
         double offset = getMouseOffset(event.getX(), event.getY());
         mouseOffset = offset;
-        System.out.println("Mouse Offset : " + offset);
+        System.out.println("Mouse Offset=" + offset);
         double focus = Math.abs(this.focus);
 
         circle.setStrokeWidth(1);
@@ -324,27 +329,30 @@ public class RadialGradientEditor extends GradientEditor {
             double delta = getNormalisedOffset(offset) - observableStop.getOffset();
 
             if (Math.abs(delta) < 0.05) {
-                if (cycleMethod.get() == CycleMethod.REFLECT && (int) offset % 2 == 1) {
-                    offset += delta;
-                } else {
-                    offset -= delta;
+
+                if (cycleMethod.get() == CycleMethod.REFLECT && (int) (offset) % 2 == 1) {
+                    delta = -delta;
                 }
+                offset -= delta;
                 circle.setStroke(observableStop.getColor().invert());
                 circle.setStrokeWidth(2);
 
-                System.out.println("Offset " + observableStop.getOffset()+ " offset : " + offset + " delta : " + delta);
+                System.out.println("Stop " + observableStop.getOffset() + " offset : " + offset + " delta : " + delta);
                 StackPane p = observableStacks.get(observableStops.indexOf(observableStop));
 
-                double cx = stopLayoutX(focus * offset / (1 + focus));
-                double cy = stopLayoutY(focus * offset / (1 + focus));
-                cx = cx + offset / mouseOffset * (event.getX() - cx);
-                cy = cy + offset / mouseOffset * (event.getY() - cy);
-                p.relocate(cx - p.getWidth() / 2, cy - p.getHeight() / 2);
+                double fx = stopLayoutX(0);
+                double fy = stopLayoutY(0);
+
+                add.relocate(fx, fy);
+
+                fx = fx + offset / mouseOffset * (event.getX() - fx);
+                fy = fy + offset / mouseOffset * (event.getY() - fy);
+                p.relocate(fx - p.getWidth() / 2, fy - p.getHeight() / 2);
+
                 break;
             }
         }
-        
-        
+
         circle.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
         circle.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
         circle.setRadius(radius * offset * unitBox.getWidth());
