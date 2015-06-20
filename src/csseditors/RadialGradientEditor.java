@@ -46,9 +46,12 @@ public class RadialGradientEditor extends GradientEditor {
     ComboBox<CycleMethod> cycleMethodBox;
     Slider sRadius, sFocus, sFocusAngle;
 
+    //UI States
+    StackPane selectedStop;
     double mouseOffset;
-    double mouseX , mouseY;
-    boolean stopSelected;
+    double mouseX, mouseY;
+    boolean showingEndPoints;
+
     //true if the value of any Slider was set from code
     //false if human interaction with GUI
     private boolean localChange;
@@ -82,21 +85,25 @@ public class RadialGradientEditor extends GradientEditor {
         unitBox.getChildren().addAll(line, circle, rCenter, rFocus, rRadius);
         unitBox.addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
         unitBox.addEventHandler(MouseEvent.MOUSE_MOVED, moved);
+        //unitBox.addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, onExitStop);
         new CenterDraggable().drag(unitBox);
 
         addStop(new Stop(0, Color.BLACK));
         addStop(new Stop(1, Color.web("001a80")));
         addStop(new Stop(0.5, Color.ALICEBLUE));
 
-        selectStop(false);
+        showEndPoints(false);
         //test
 
         circle.setStroke(Color.RED);
         circle.setFill(Color.TRANSPARENT);
+        circle.setVisible(false);
+        circle.setMouseTransparent(true);
         add.getStyleClass().add("add");
 
     }
 
+    //<editor-fold defaultstate="collapsed" desc="stopLayout">
     @Override
     protected double stopLayoutX(double t) {
         double r = radius * unitBox.getWidth();
@@ -120,6 +127,7 @@ public class RadialGradientEditor extends GradientEditor {
         double y = fy + t * deltay;
         return y;
     }
+//</editor-fold>
 
     @Override
     protected void layoutUnitBoxContents() {
@@ -147,18 +155,39 @@ public class RadialGradientEditor extends GradientEditor {
          //test end */
     }
 
-    private void layoutCircle(double ringOffset) {
-
-        {//when drag center starts
-            circle.setVisible(false);
-            add.setVisible(false);
-        }
-        {//when on a stop
-            add.setVisible(false);
-
+    private void selectStop(StackPane p) {
+        if (selectedStop == p) {
+            //deselect the stop
+            selectedStop.setVisible(false);
+            selectedStop.setMouseTransparent(true);
+            selectedStop = null;
+        } else {
+            selectedStop = p;
+            selectedStop.setVisible(true);
+            selectedStop.setMouseTransparent(false);
+            stopList.getSelectionModel().select(stopMap.get(selectedStop));
         }
     }
 
+    private void showStop(StackPane p) {
+        for (StackPane pane : observableStacks) {
+            pane.setVisible(false);
+        }
+        p.setVisible(true);
+    }
+
+    private void hideStop(StackPane p) {
+        for (StackPane pane : observableStacks) {
+            pane.setVisible(false);
+        }
+        p.setVisible(true);
+    }
+
+    private void layoutRingControls() {
+
+    }
+
+    //<editor-fold defaultstate="collapsed" desc="getOffset">
     /**
      *
      * @param mx mouse x coordinate in local bounds of unitBox
@@ -227,6 +256,7 @@ public class RadialGradientEditor extends GradientEditor {
         return getNormalisedOffset(D);
 
     }
+//</editor-fold>
 
     @Override
     public void updatePreview() {
@@ -243,7 +273,7 @@ public class RadialGradientEditor extends GradientEditor {
         unitBox.setBackground(new Background(new BackgroundFill(rg, CornerRadii.EMPTY, Insets.EMPTY)));
     }
 
-    private void selectStop(boolean activate) {
+    private void showEndPoints(boolean activate) {
 
         for (StackPane p : observableStacks) {
             p.setDisable(activate);
@@ -262,6 +292,7 @@ public class RadialGradientEditor extends GradientEditor {
         line.setDisable(activate);
     }
 
+    //<editor-fold defaultstate="collapsed" desc="controls">
     private void initUIControls() {
         Text cycleText = new Text("Cycle Method");
         Text radiusText = new Text("Radius");
@@ -277,10 +308,9 @@ public class RadialGradientEditor extends GradientEditor {
         sRadius.valueProperty().addListener(controlListener);
         sFocus.valueProperty().addListener(controlListener);
         sFocusAngle.valueProperty().addListener(controlListener);
-        
+
         sRadius.setBlockIncrement(0.1);
         sFocus.setBlockIncrement(0.1);
-        
 
     }
 
@@ -300,12 +330,28 @@ public class RadialGradientEditor extends GradientEditor {
             unitBox.requestLayout();
         }
     };
+//</editor-fold>
 
+    //<editor-fold defaultstate="collapsed" desc="other mouse handlers">
+    EventHandler<MouseEvent> onExitStop = new EventHandler<MouseEvent>() {
+
+        @Override
+        public void handle(MouseEvent event) {
+            System.out.println("exit sstop " + event.getTarget());
+            if (event.getTarget() instanceof StackPane) {
+                StackPane p = (StackPane) event.getTarget();
+                if (selectedStop != p) {
+                    p.setVisible(false);
+                    System.out.println("visible=false");
+                }
+            }
+        }
+    };
     EventHandler<MouseEvent> onPressed = new EventHandler<MouseEvent>() {
 
         @Override
         public void handle(MouseEvent event) {
-            if (event.getTarget() == circle);
+
         }
     };
 
@@ -313,63 +359,82 @@ public class RadialGradientEditor extends GradientEditor {
 
         @Override
         public void handle(MouseEvent event) {
+
         }
     };
+//</editor-fold>
 
-    EventHandler<MouseEvent> moved = (MouseEvent event) -> {
-        double offset = getMouseOffset(event.getX(), event.getY());
-        mouseOffset = offset;
-        System.out.println("Mouse Offset=" + offset);
-        double focus = Math.abs(this.focus);
+    EventHandler<MouseEvent> moved = new EventHandler<MouseEvent>() {
 
-        circle.setStrokeWidth(1);
+        StackPane hoverPane;
 
-        for (Stop observableStop : observableStops) {
-
-            double delta = getNormalisedOffset(offset) - observableStop.getOffset();
-
-            if (Math.abs(delta) < 0.05) {
-
-                if (cycleMethod.get() == CycleMethod.REFLECT && (int) (offset) % 2 == 1) {
-                    delta = -delta;
-                }
-                offset -= delta;
-                circle.setStroke(observableStop.getColor().invert());
-                circle.setStrokeWidth(2);
-
-                System.out.println("Stop " + observableStop.getOffset() + " offset : " + offset + " delta : " + delta);
-                StackPane p = observableStacks.get(observableStops.indexOf(observableStop));
-
-                double fx = stopLayoutX(0);
-                double fy = stopLayoutY(0);
-
-                add.relocate(fx, fy);
-
-                fx = fx + offset / mouseOffset * (event.getX() - fx);
-                fy = fy + offset / mouseOffset * (event.getY() - fy);
-                p.relocate(fx - p.getWidth() / 2, fy - p.getHeight() / 2);
-
-                break;
+        @Override
+        public void handle(MouseEvent event) {
+            if (selectedStop != null || event.getTarget() == hoverPane) {
+                System.out.println("moved: on StackPane " + (event.getTarget() == hoverPane));
+                return;
+            } else if (hoverPane != null) {
+                hoverPane.setVisible(false);
+                hoverPane.setMouseTransparent(true);
+                hoverPane = null;
             }
-        }
 
-        circle.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
-        circle.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
-        circle.setRadius(radius * offset * unitBox.getWidth());
+            double offset = getMouseOffset(event.getX(), event.getY());
+            double normalOffset = getNormalisedOffset(offset);
+            mouseOffset = offset;
+            if (mouseOffset == 0) {
+                return;
+            }
+
+            circle.setStrokeWidth(1);
+
+            for (Stop observableStop : observableStops) {
+                double delta = normalOffset - observableStop.getOffset();
+                if (Math.abs(delta) < 0.05) {
+
+                    if (cycleMethod.get() == CycleMethod.REFLECT && (int) (offset) % 2 == 1) {
+                        delta = -delta;
+                    }
+                    offset -= delta;
+                    circle.setStroke(observableStop.getColor().invert());
+                    circle.setStrokeWidth(2);
+
+                    StackPane p = observableStacks.get(observableStops.indexOf(observableStop));
+
+                    double fx = stopLayoutX(0);
+                    double fy = stopLayoutY(0);
+
+                    add.relocate(fx, fy);
+
+                    fx = fx + offset / mouseOffset * (event.getX() - fx);
+                    fy = fy + offset / mouseOffset * (event.getY() - fy);
+                    p.relocate(fx - p.getWidth() / 2, fy - p.getHeight() / 2);
+                    p.setVisible(true);
+                    p.setMouseTransparent(false);
+                    hoverPane = p;
+
+                    break;
+                }
+            }
+            double focus = Math.abs(RadialGradientEditor.this.focus);
+            circle.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
+            circle.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
+            circle.setRadius(radius * offset * unitBox.getWidth());
+        }
     };
 
     EventHandler<MouseEvent> onClick = (MouseEvent event) -> {
         //check for right click(context menu)
         if (event.isPopupTrigger()) {
-            stopSelected = !stopSelected;
-            selectStop(stopSelected);
+            showingEndPoints = !showingEndPoints;
+            showEndPoints(showingEndPoints);
 
-        } else if (stopSelected) {
+        } else if (showingEndPoints) {
         } else if (event.getTarget() instanceof StackPane) {
             //If the mouse is clicked on an existing stop then make it the current selection
             StackPane p = (StackPane) event.getTarget();
             if (stopMap.containsKey(p)) {
-                stopList.getSelectionModel().select(stopMap.get(p));
+                selectStop(p);
             }
         } else {
             //Mouse is clicked on empty region.So add a new stop at the particular offset.
@@ -378,39 +443,6 @@ public class RadialGradientEditor extends GradientEditor {
         }
     };
 
-//    EventHandler<MouseEvent> onDrag = (MouseEvent event) -> {
-//        if (stopSelected) {
-//
-//        }
-//        if (event.getTarget() == rFocus) {
-//            double x = event.getX();
-//            double y = event.getY();
-//            double cx = centerX * unitBox.getWidth();
-//            double cy = centerY * unitBox.getHeight();
-//
-//            double theta = Math.toDegrees(Math.atan2(y - cy, x - cx));
-//            double f = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-//            f = f / radius / unitBox.getWidth();
-//            f = f > 1 ? 1 : f;
-//            focus = f;
-//            focusAngle = theta;
-//            unitBox.requestLayout();
-//            
-//
-//        } else if (event.getTarget() instanceof StackPane) {
-//            //update the offset of the dragged stop
-//            StackPane p = (StackPane) event.getTarget();
-//            Stop s = stopMap.get(p);
-//            if (s == null) {
-//                return;
-//            }
-//            double offset = getOffset(event.getX(), event.getY());
-//            updateStop(p, new Stop(offset, s.getColor()));
-//
-//        } else { //drag center
-//
-//        }
-//    };
     private class CenterDraggable extends drag.Draggable {
 
         double cx, cy;
@@ -453,6 +485,7 @@ public class RadialGradientEditor extends GradientEditor {
                 }
                 double offset = getOffset(event.getX(), event.getY());
                 updateStop(p, new Stop(offset, s.getColor()));
+                p.relocate(event.getX() - p.getWidth() / 2, event.getY() - p.getHeight() / 2);
 
             } else { //drag center
 
@@ -460,6 +493,7 @@ public class RadialGradientEditor extends GradientEditor {
                 centerY = cy + dragY / unitBox.getHeight();
                 centerX = centerX > 1 ? 1 : centerX < 0 ? 0 : centerX;
                 centerY = centerY > 1 ? 1 : centerY < 0 ? 0 : centerY;
+
                 unitBox.requestLayout();
                 //unitBox.setTranslateX(-dragX);
                 //unitBox.setTranslateY(-dragY);
