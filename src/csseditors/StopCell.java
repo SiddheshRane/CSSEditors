@@ -5,11 +5,14 @@
  */
 package csseditors;
 
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Slider;
 import static javafx.scene.input.KeyCode.ENTER;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -48,7 +51,6 @@ public class StopCell extends ListCell<Stop> {
         HBox.setHgrow(filler, Priority.ALWAYS);
 
         offset.setOnMouseClicked((MouseEvent e) -> {
-
             editOffset();
         });
         offsetSlider.setOnKeyPressed((ke) -> {
@@ -57,7 +59,6 @@ public class StopCell extends ListCell<Stop> {
             }
         });
         /*color.valueProperty().addListener((Observable observable) -> {
-            
          startEdit();
          commitEdit(new Stop(getItem().getOffset(), color.getValue()));
          });*/
@@ -73,6 +74,7 @@ public class StopCell extends ListCell<Stop> {
         cross.setOnMouseClicked((event) -> {
             deleteStop();
         });
+
     }
 
     @Override

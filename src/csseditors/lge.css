@@ -7,11 +7,14 @@ and open the template in the editor.
     Created on : Dec 20, 2014, 6:21:48 PM
     Author     : Siddhesh
 */
-
+* {
+    -fx-border-variable-color : black;
+    
+}
 .end {
     -fx-pref-width : 10;
     -fx-pref-height:10;
-    -fx-border-color : black;
+    -fx-border-color : -fx-border-variable-color;
     -fx-border-radius: 10;
     -fx-background-color:whitesmoke;
     -fx-background-radius : 10;
@@ -21,7 +24,7 @@ and open the template in the editor.
 .start {
     -fx-pref-width : 10;
     -fx-pref-height:10;
-    -fx-border-color : black;
+    -fx-border-color : -fx-border-variable-color;
     -fx-border-radius: 10;
     -fx-background-color:whitesmoke;
     -fx-background-radius : 10;
@@ -29,7 +32,7 @@ and open the template in the editor.
 
 }
 .stop{
-    -fx-border-color:black;
+    -fx-border-color:-fx-border-variable-color;
     -fx-border-radius: 12;
     -fx-pref-width:10;
     -fx-pref-height:10;

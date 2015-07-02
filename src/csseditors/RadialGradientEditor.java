@@ -82,7 +82,7 @@ public class RadialGradientEditor extends GradientEditor {
         clip.widthProperty().bind(unitBox.widthProperty());
         clip.heightProperty().bind(unitBox.heightProperty());
         unitBox.setClip(clip);
-        unitBox.getChildren().addAll(line, circle, rCenter, rFocus, rRadius);
+        unitBox.getChildren().addAll(line, circle, add, rCenter, rFocus, rRadius);
         unitBox.addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
         unitBox.addEventHandler(MouseEvent.MOUSE_MOVED, moved);
         //unitBox.addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, onExitStop);
@@ -97,7 +97,7 @@ public class RadialGradientEditor extends GradientEditor {
 
         circle.setStroke(Color.RED);
         circle.setFill(Color.TRANSPARENT);
-        circle.setVisible(false);
+        //circle.setVisible(false);
         circle.setMouseTransparent(true);
         add.getStyleClass().add("add");
 
@@ -162,29 +162,19 @@ public class RadialGradientEditor extends GradientEditor {
             selectedStop.setMouseTransparent(true);
             selectedStop = null;
         } else {
+            if (selectedStop != null) {
+                selectedStop.setVisible(false);
+                selectedStop.setMouseTransparent(true);
+            }
             selectedStop = p;
+            if (p == null) {
+                stopList.getSelectionModel().clearSelection();
+                return;
+            }
             selectedStop.setVisible(true);
             selectedStop.setMouseTransparent(false);
             stopList.getSelectionModel().select(stopMap.get(selectedStop));
         }
-    }
-
-    private void showStop(StackPane p) {
-        for (StackPane pane : observableStacks) {
-            pane.setVisible(false);
-        }
-        p.setVisible(true);
-    }
-
-    private void hideStop(StackPane p) {
-        for (StackPane pane : observableStacks) {
-            pane.setVisible(false);
-        }
-        p.setVisible(true);
-    }
-
-    private void layoutRingControls() {
-
     }
 
     //<editor-fold defaultstate="collapsed" desc="getOffset">
@@ -327,6 +317,9 @@ public class RadialGradientEditor extends GradientEditor {
             radius = sRadius.getValue();
             focus = sFocus.getValue();
             focusAngle = sFocusAngle.getValue();
+            if (selectedStop != null) {
+                selectStop(null);
+            }
             unitBox.requestLayout();
         }
     };
@@ -371,7 +364,6 @@ public class RadialGradientEditor extends GradientEditor {
         @Override
         public void handle(MouseEvent event) {
             if (selectedStop != null || event.getTarget() == hoverPane) {
-                System.out.println("moved: on StackPane " + (event.getTarget() == hoverPane));
                 return;
             } else if (hoverPane != null) {
                 hoverPane.setVisible(false);
@@ -387,7 +379,6 @@ public class RadialGradientEditor extends GradientEditor {
             }
 
             circle.setStrokeWidth(1);
-
             for (Stop observableStop : observableStops) {
                 double delta = normalOffset - observableStop.getOffset();
                 if (Math.abs(delta) < 0.05) {
@@ -404,13 +395,13 @@ public class RadialGradientEditor extends GradientEditor {
                     double fx = stopLayoutX(0);
                     double fy = stopLayoutY(0);
 
-                    add.relocate(fx, fy);
-
                     fx = fx + offset / mouseOffset * (event.getX() - fx);
                     fy = fy + offset / mouseOffset * (event.getY() - fy);
                     p.relocate(fx - p.getWidth() / 2, fy - p.getHeight() / 2);
-                    p.setVisible(true);
-                    p.setMouseTransparent(false);
+                    if (hoverPane == null) {
+                        p.setVisible(true);
+                        p.setMouseTransparent(false);
+                    }
                     hoverPane = p;
 
                     break;
@@ -420,6 +411,11 @@ public class RadialGradientEditor extends GradientEditor {
             circle.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
             circle.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
             circle.setRadius(radius * offset * unitBox.getWidth());
+            add.relocate(
+                    stopLayoutX(focus * offset / (1 + focus)) - add.getWidth() / 2,
+                    stopLayoutY(focus * offset / (1 + focus)) - add.getHeight() / 2
+            );
+
         }
     };
 
@@ -446,6 +442,7 @@ public class RadialGradientEditor extends GradientEditor {
     private class CenterDraggable extends drag.Draggable {
 
         double cx, cy;
+        double scx, scy, offset;
 
         @Override
         protected void dragged(MouseEvent event) {
@@ -487,6 +484,22 @@ public class RadialGradientEditor extends GradientEditor {
                 updateStop(p, new Stop(offset, s.getColor()));
                 p.relocate(event.getX() - p.getWidth() / 2, event.getY() - p.getHeight() / 2);
 
+            } else if (selectedStop != null) {
+                //adjust focus and focusAngle 
+
+                double w = unitBox.getWidth();
+
+                double f2 = (scx + dragX) / w - centerX;
+                f2 *= f2;
+                f2 += Math.pow(((scy+dragY)/w - centerY), 2);
+                f2 = Math.sqrt(f2);
+                f2 /= (1+offset);
+                f2 /= radius;
+                System.out.println("f2 = "+f2);
+                f2 = f2 > 1 ? 1 : f2 < 0 ? 0 : f2;
+                focus = f2;
+                unitBox.requestLayout();
+
             } else { //drag center
 
                 centerX = cx + dragX / unitBox.getWidth();
@@ -503,8 +516,16 @@ public class RadialGradientEditor extends GradientEditor {
 
         @Override
         protected void pressed(MouseEvent event) {
-            cx = centerX;
-            cy = centerY;
+            if (selectedStop == null) {
+                cx = centerX;
+                cy = centerY;
+            } else {
+                offset = stopMap.get(selectedStop).getOffset();
+                double f = Math.abs(focus);
+                scx = stopLayoutX(f * offset / (1 + f));
+                scy = stopLayoutY(f * offset / (1 + f));
+
+            }
         }
 
     }

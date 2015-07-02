@@ -21,6 +21,8 @@ import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -124,9 +126,19 @@ public abstract class GradientEditor extends VBox {
                     deleteStop(key);
                 } else {
                     updateStop(key, b.getNewValue());
-
                 }
-
+            }
+        });
+        stopList.addEventHandler(KeyEvent.KEY_PRESSED, (e) -> {
+            System.out.println("ev : " + e.getEventType());
+            if (e.getCode() == KeyCode.DELETE) {
+                Stop stop = stopList.getSelectionModel().getSelectedItem();
+                if (stop != null) {
+                    int index = stopList.getSelectionModel().getSelectedIndex();
+                    int i = sortedStops.getSourceIndex(index);
+                    StackPane key = observableStacks.get(i);
+                    deleteStop(key);
+                }
             }
         });
 
@@ -212,7 +224,7 @@ public abstract class GradientEditor extends VBox {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        unitBox.resizeRelocate((getWidth()-unitBox.getHeight())/2 , unitBox.getLayoutY() , unitBox.getHeight(), unitBox.getHeight());
+        unitBox.resizeRelocate((getWidth() - unitBox.getHeight()) / 2, unitBox.getLayoutY(), unitBox.getHeight(), unitBox.getHeight());
     }
 
     /**
@@ -222,8 +234,8 @@ public abstract class GradientEditor extends VBox {
      *
      * @param mx the layout x of mouse pointer in unitBox
      * @param my the layout y of mouse pointer in unitBox
-     * @return the offset at the projection of ( mx , my ) onto the gradient stops
-     * line.
+     * @return the offset at the projection of ( mx , my ) onto the gradient
+     * stops line.
      */
     protected abstract double getOffset(double mx, double my);
 
