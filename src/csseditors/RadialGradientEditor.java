@@ -12,6 +12,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -33,10 +34,8 @@ public class RadialGradientEditor extends GradientEditor {
     double centerX = 0.5, centerY = 0.5;
     double radius = 0.5, focus = 0, focusAngle = 90;
 
-    /*_______________
-     |               |
-     | UI COMPONENTS |
-     |_______________|
+    /*
+     UI COMPONENTS 
      */
     Region rCenter, rFocus, rRadius;
     Line line;
@@ -48,6 +47,7 @@ public class RadialGradientEditor extends GradientEditor {
 
     //UI States
     StackPane selectedStop;
+    double selectedOffset;
     double mouseOffset;
     double mouseX, mouseY;
     boolean showingEndPoints;
@@ -155,28 +155,6 @@ public class RadialGradientEditor extends GradientEditor {
          //test end */
     }
 
-    private void selectStop(StackPane p) {
-        if (selectedStop == p) {
-            //deselect the stop
-            selectedStop.setVisible(false);
-            selectedStop.setMouseTransparent(true);
-            selectedStop = null;
-        } else {
-            if (selectedStop != null) {
-                selectedStop.setVisible(false);
-                selectedStop.setMouseTransparent(true);
-            }
-            selectedStop = p;
-            if (p == null) {
-                stopList.getSelectionModel().clearSelection();
-                return;
-            }
-            selectedStop.setVisible(true);
-            selectedStop.setMouseTransparent(false);
-            stopList.getSelectionModel().select(stopMap.get(selectedStop));
-        }
-    }
-
     //<editor-fold defaultstate="collapsed" desc="getOffset">
     /**
      *
@@ -264,7 +242,6 @@ public class RadialGradientEditor extends GradientEditor {
     }
 
     private void showEndPoints(boolean activate) {
-
         for (StackPane p : observableStacks) {
             p.setDisable(activate);
 
@@ -280,6 +257,29 @@ public class RadialGradientEditor extends GradientEditor {
         rRadius.setMouseTransparent(!activate);
 
         line.setDisable(activate);
+    }
+
+    private void selectStop(StackPane p) {
+        if (selectedStop == p) {
+            //deselect the stop
+            selectedStop.setVisible(false);
+            selectedStop.setMouseTransparent(true);
+            selectedStop = null;
+            selectedOffset = -1;
+        } else {
+            if (selectedStop != null) {
+                selectedStop.setVisible(false);
+                selectedStop.setMouseTransparent(true);
+            }
+            selectedStop = p;
+            if (p == null) {
+                stopList.getSelectionModel().clearSelection();
+                return;
+            }
+            selectedStop.setVisible(true);
+            selectedStop.setMouseTransparent(false);
+            stopList.getSelectionModel().select(stopMap.get(selectedStop));
+        }
     }
 
     //<editor-fold defaultstate="collapsed" desc="controls">
@@ -325,40 +325,9 @@ public class RadialGradientEditor extends GradientEditor {
     };
 //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="other mouse handlers">
-    EventHandler<MouseEvent> onExitStop = new EventHandler<MouseEvent>() {
-
-        @Override
-        public void handle(MouseEvent event) {
-            System.out.println("exit sstop " + event.getTarget());
-            if (event.getTarget() instanceof StackPane) {
-                StackPane p = (StackPane) event.getTarget();
-                if (selectedStop != p) {
-                    p.setVisible(false);
-                    System.out.println("visible=false");
-                }
-            }
-        }
-    };
-    EventHandler<MouseEvent> onPressed = new EventHandler<MouseEvent>() {
-
-        @Override
-        public void handle(MouseEvent event) {
-
-        }
-    };
-
-    EventHandler<MouseEvent> onReleased = new EventHandler<MouseEvent>() {
-
-        @Override
-        public void handle(MouseEvent event) {
-
-        }
-    };
-//</editor-fold>
-
     EventHandler<MouseEvent> moved = new EventHandler<MouseEvent>() {
 
+        //the stop currently being hovered
         StackPane hoverPane;
 
         @Override
@@ -387,6 +356,7 @@ public class RadialGradientEditor extends GradientEditor {
                         delta = -delta;
                     }
                     offset -= delta;
+                    selectedOffset = offset;
                     circle.setStroke(observableStop.getColor().invert());
                     circle.setStrokeWidth(2);
 
@@ -419,23 +389,28 @@ public class RadialGradientEditor extends GradientEditor {
         }
     };
 
-    EventHandler<MouseEvent> onClick = (MouseEvent event) -> {
-        //check for right click(context menu)
-        if (event.isPopupTrigger()) {
-            showingEndPoints = !showingEndPoints;
-            showEndPoints(showingEndPoints);
+    EventHandler<MouseEvent> onClick = new EventHandler<MouseEvent>() {
 
-        } else if (showingEndPoints) {
-        } else if (event.getTarget() instanceof StackPane) {
-            //If the mouse is clicked on an existing stop then make it the current selection
-            StackPane p = (StackPane) event.getTarget();
-            if (stopMap.containsKey(p)) {
-                selectStop(p);
+        public void handle(MouseEvent event) {
+            //check for right click(context menu)
+            if (event.getButton() == MouseButton.SECONDARY) {
+                showingEndPoints = !showingEndPoints;
+                showEndPoints(showingEndPoints);
+
+            } else if (showingEndPoints) {
+            } else if (event.getTarget() instanceof StackPane) {
+                //If the mouse is clicked on an existing stop then make it the current selection
+                StackPane p = (StackPane) event.getTarget();
+                if (stopMap.containsKey(p)) {
+                    selectStop(p);
+                }
+            } else if (selectedStop != null) {
+                selectStop(null);
+            } else {
+                //Mouse is clicked on empty region.So add a new stop at the particular offset.
+                double offset = getOffset(event.getX(), event.getY());
+                addStop(new Stop(offset, Color.WHITESMOKE));
             }
-        } else {
-            //Mouse is clicked on empty region.So add a new stop at the particular offset.
-            double offset = getOffset(event.getX(), event.getY());
-            addStop(new Stop(offset, Color.WHITESMOKE));
         }
     };
 
@@ -485,19 +460,27 @@ public class RadialGradientEditor extends GradientEditor {
                 p.relocate(event.getX() - p.getWidth() / 2, event.getY() - p.getHeight() / 2);
 
             } else if (selectedStop != null) {
-                //adjust focus and focusAngle 
+                //adjust focus and focusAngle
+                double x = (scx + dragX) / unitBox.getWidth() - centerX;
+                double y = (scy + dragY) / unitBox.getHeight() - centerY;
+                double d = Math.sqrt(x * x + y * y) / radius;
+                double t = 1 - offset;
+                double f = d / t;
 
-                double w = unitBox.getWidth();
+                f = f > 1 ? 1 : f < -1 ? -1 : f;
+                focusAngle = Math.toDegrees(Math.atan2(y, x));
+                focus = f;
+                f = Math.abs(f);
 
-                double f2 = (scx + dragX) / w - centerX;
-                f2 *= f2;
-                f2 += Math.pow(((scy+dragY)/w - centerY), 2);
-                f2 = Math.sqrt(f2);
-                f2 /= (1+offset);
-                f2 /= radius;
-                System.out.println("f2 = "+f2);
-                f2 = f2 > 1 ? 1 : f2 < 0 ? 0 : f2;
-                focus = f2;
+                circle.setCenterX(stopLayoutX(f * offset / (1 + f)));
+                circle.setCenterY(stopLayoutY(f * offset / (1 + f)));
+                circle.setRadius(radius * offset * unitBox.getWidth());
+                add.relocate(
+                        stopLayoutX(f * offset / (1 + f)) - add.getWidth() / 2,
+                        stopLayoutY(f * offset / (1 + f)) - add.getHeight() / 2
+                );
+                selectedStop.setVisible(false);
+                updateUIControls();
                 unitBox.requestLayout();
 
             } else { //drag center
@@ -520,7 +503,7 @@ public class RadialGradientEditor extends GradientEditor {
                 cx = centerX;
                 cy = centerY;
             } else {
-                offset = stopMap.get(selectedStop).getOffset();
+                offset = selectedOffset;
                 double f = Math.abs(focus);
                 scx = stopLayoutX(f * offset / (1 + f));
                 scy = stopLayoutY(f * offset / (1 + f));

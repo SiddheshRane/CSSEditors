@@ -10,6 +10,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -45,7 +46,7 @@ public class CSSEditors extends Application {
     public void backgroundFillEditorTest(Stage s) {
         VBox box = new VBox();
         Button b = new Button("Stylized Button");
-        BackgroundFill bgFill = new BackgroundFill(Color.AQUAMARINE, new CornerRadii(3), Insets.EMPTY);
+        BackgroundFill bgFill = new BackgroundFill(Color.DARKMAGENTA, new CornerRadii(3), Insets.EMPTY);
 
         b.setBackground(new Background(bgFill));
 
@@ -54,21 +55,23 @@ public class CSSEditors extends Application {
         layer.backgroundFillProperty().addListener((ObservableValue<? extends BackgroundFill> observable, BackgroundFill oldValue, BackgroundFill newValue) -> {
             b.setBackground(new Background(newValue));
         });
+        layer.layoutXProperty().bind(b.layoutXProperty());
+        layer.layoutYProperty().bind(b.layoutYProperty());
+        
         BackgroundFillEditor editor = new BackgroundFillEditor(layer.backgroundFillProperty());
 
         Group g = new Group(layer);
-        layer.setScaleX(2);
-        layer.setScaleY(2);
+        layer.setScaleX(4);
+        layer.setScaleY(4);
 
         box.getChildren().addAll(b, editor, g);
+        box.setAlignment(Pos.CENTER);
 
         Scene scene = new Scene(box);
         scene.getStylesheets().add("/csseditors/csseditors.css");
         s.setScene(scene);
         s.setTitle("BackgroundFillEditor Test");
         s.show();
-        layer.setMinHeight(b.getHeight());
-        layer.setMinWidth(b.getWidth());
     }
 
     public void regionPropertiesTest(Stage s) {
@@ -126,8 +129,8 @@ public class CSSEditors extends Application {
         s.show();
     }
 
-    public void RadialGradientEditorTest(Stage s){
-    AnchorPane pane = new AnchorPane();
+    public void RadialGradientEditorTest(Stage s) {
+        AnchorPane pane = new AnchorPane();
         RadialGradientEditor radialGradientEditor = new RadialGradientEditor();
         pane.getChildren().add(radialGradientEditor);
         AnchorPane.setLeftAnchor(radialGradientEditor, 25d);
@@ -140,6 +143,7 @@ public class CSSEditors extends Application {
         s.setTitle("RGE Test");
         s.show();
     }
+
     public void stopCellTest(Stage s) {
         AnchorPane pane = new AnchorPane();
         ListView<Stop> stopsList = new ListView<>();
