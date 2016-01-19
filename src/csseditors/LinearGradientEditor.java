@@ -18,6 +18,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -45,11 +46,8 @@ public class LinearGradientEditor extends GradientEditor {
     double startY = 0;
     double endX = 1;
     double endY = 1;
-
-    /*_______________
-     |               |
-     | UI COMPONENTS |
-     |_______________|
+    /*
+     * UI COMPONENTS 
      */
     //control for setting startX , startY , endX , endY in LinearGradient
     Region start, end;
@@ -141,8 +139,8 @@ public class LinearGradientEditor extends GradientEditor {
         //works only for proportional gradient
         Insets pad = unitBox.getPadding();
         double x = (unitBox.getWidth() - pad.getLeft() - pad.getRight())
-                   * (startX + t * (endX - startX))
-                   + pad.getLeft();
+                * (startX + t * (endX - startX))
+                + pad.getLeft();
         return x;
     }
 
@@ -151,8 +149,8 @@ public class LinearGradientEditor extends GradientEditor {
         //works only for proportional gradient
         Insets pad = unitBox.getPadding();
         double y = (unitBox.getHeight() - pad.getTop() - pad.getBottom())
-                   * (startY + t * (endY - startY))
-                   + pad.getTop();
+                * (startY + t * (endY - startY))
+                + pad.getTop();
         return y;
     }
 
@@ -192,7 +190,6 @@ public class LinearGradientEditor extends GradientEditor {
             }
         } else if (m == Double.POSITIVE_INFINITY) {
             offset = (my - p.getTop()) / (unitBox.getHeight() - p.getTop() - p.getBottom());
-
         } else if (m == Double.NEGATIVE_INFINITY) {
             offset = 1 - (my - p.getTop()) / (unitBox.getHeight() - p.getTop() - p.getBottom());
         } else {
@@ -205,9 +202,9 @@ public class LinearGradientEditor extends GradientEditor {
 
             offset = x - x1;
             offset /= (endX - startX)
-                      * (unitBox.getWidth()
-                         - unitBox.getPadding().getLeft()
-                         - unitBox.getPadding().getRight());
+                    * (unitBox.getWidth()
+                    - unitBox.getPadding().getLeft()
+                    - unitBox.getPadding().getRight());
         }
 
         if (offset > 1) {
@@ -243,8 +240,9 @@ public class LinearGradientEditor extends GradientEditor {
 
     EventHandler<MouseEvent> onClick = (MouseEvent event) -> {
         //check for right click(context menu)
-        if (event.isPopupTrigger()) {
-
+        System.out.println("Buttons Clicked: " + event.getButton());
+        if (event.getButton() == MouseButton.SECONDARY) {
+            System.out.println("Popup Trigger!");
             showingEndPoints = !showingEndPoints;
             enableEndPoints(showingEndPoints);
 

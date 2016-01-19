@@ -14,23 +14,7 @@
       <Label text="Insets and Corner Radii" />
       <StackPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="200.0" styleClass="inset">
          <children>
-            <TextField fx:id="cornerTLy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="20.0" StackPane.alignment="TOP_LEFT" />
-            <TextField fx:id="cornerTLx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="25.0" StackPane.alignment="TOP_LEFT">
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" />
-               </padding>
-            </TextField>
-            <TextField fx:id="cornerBRy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="-20.0" StackPane.alignment="BOTTOM_RIGHT" />
-            <TextField fx:id="cornerBRx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="-25.0" StackPane.alignment="BOTTOM_RIGHT" />
-            <TextField fx:id="cornerBLy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="-20.0" StackPane.alignment="BOTTOM_LEFT" />
-            <TextField fx:id="cornerBLx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="25.0" StackPane.alignment="BOTTOM_LEFT" />
-            <TextField fx:id="cornerTRy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="20.0" StackPane.alignment="TOP_RIGHT" />
-            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" startAngle="90.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="12.0" translateY="9.5" StackPane.alignment="TOP_LEFT" />
-            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="-12.0" translateY="9.5" StackPane.alignment="TOP_RIGHT" />
-            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" startAngle="180.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="12.0" translateY="-9.5" StackPane.alignment="BOTTOM_LEFT" />
-            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" startAngle="-90.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="-12.0" translateY="-9.5" StackPane.alignment="BOTTOM_RIGHT" />
-            <TextField fx:id="cornerTRx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="-25.0" StackPane.alignment="TOP_RIGHT" />
-            <TextField fx:id="rightInset" alignment="CENTER" maxWidth="25.0" onAction="#handleInsetsChange" prefColumnCount="2" StackPane.alignment="CENTER_RIGHT" />
+            <TextField fx:id="cornerTLx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="25.0" StackPane.alignment="TOP_LEFT" />
             <TextField fx:id="topInset" alignment="CENTER" maxWidth="25.0" onAction="#handleInsetsChange" StackPane.alignment="TOP_CENTER">
                <tooltip>
                   <Tooltip text="Top inset">
@@ -39,8 +23,20 @@
                      </font>
                   </Tooltip>
                </tooltip></TextField>
-            <TextField fx:id="leftInset" alignment="CENTER" maxWidth="25.0" onAction="#handleInsetsChange" prefColumnCount="2" StackPane.alignment="CENTER_LEFT" />
+            <TextField fx:id="cornerTRx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="-25.0" StackPane.alignment="TOP_RIGHT" />
+            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="-12.0" translateY="9.5" StackPane.alignment="TOP_RIGHT" />
+            <TextField fx:id="cornerTRy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="20.0" StackPane.alignment="TOP_RIGHT" />
+            <TextField fx:id="rightInset" alignment="CENTER" maxWidth="25.0" onAction="#handleInsetsChange" prefColumnCount="2" StackPane.alignment="CENTER_RIGHT" />
+            <TextField fx:id="cornerBRy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="-20.0" StackPane.alignment="BOTTOM_RIGHT" />
+            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" startAngle="-90.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="-12.0" translateY="-9.5" StackPane.alignment="BOTTOM_RIGHT" />
+            <TextField fx:id="cornerBRx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="-25.0" StackPane.alignment="BOTTOM_RIGHT" />
             <TextField fx:id="bottomInset" alignment="CENTER" maxWidth="25.0" onAction="#handleInsetsChange" prefColumnCount="2" StackPane.alignment="BOTTOM_CENTER" />
+            <TextField fx:id="cornerBLx" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateX="25.0" StackPane.alignment="BOTTOM_LEFT" />
+            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" startAngle="180.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="12.0" translateY="-9.5" StackPane.alignment="BOTTOM_LEFT" />
+            <TextField fx:id="cornerBLy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="-20.0" StackPane.alignment="BOTTOM_LEFT" />
+            <TextField fx:id="leftInset" alignment="CENTER" maxWidth="25.0" onAction="#handleInsetsChange" prefColumnCount="2" StackPane.alignment="CENTER_LEFT" />
+            <TextField fx:id="cornerTLy" maxWidth="25.0" onAction="#handleCornerRadiiChange" translateY="20.0" StackPane.alignment="TOP_LEFT" />
+            <Arc fill="TRANSPARENT" length="90.0" radiusX="12.5" radiusY="10.0" startAngle="90.0" stroke="#f48eed" strokeLineCap="BUTT" strokeType="OUTSIDE" translateX="12.0" translateY="9.5" StackPane.alignment="TOP_LEFT" />
             <StackPane fx:id="fillPane" prefHeight="117.0" prefWidth="166.0">
                <StackPane.margin>
                   <Insets bottom="22.0" left="33.0" right="33.0" top="22.0" />

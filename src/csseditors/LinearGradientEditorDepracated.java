@@ -191,8 +191,8 @@ public class LinearGradientEditorDepracated extends StackPane {
          */
         private void updateStop(StackPane stackPane, Stop stop) {
             stackPane.setLayoutY((getHeight() - stackPane.getHeight() - getPadding().getBottom()
-                                  - getPadding().getTop()) * stop.getOffset()
-                                 + getPadding().getTop());
+                    - getPadding().getTop()) * stop.getOffset()
+                    + getPadding().getTop());
         }
 
         private void layoutStops() {

@@ -3,7 +3,6 @@ package csseditors;
 import drag.Draggable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,8 +22,6 @@ import javafx.scene.shape.ArcType;
  */
 public class BackgroundLayer extends StackPane {
 
-
-
     /*
      Currently this class uses 3 different ObjectProperty for Insets ,Paint 
      and CornerRadii of a BackgroundFill.However any change to these properies 
@@ -36,7 +33,9 @@ public class BackgroundLayer extends StackPane {
     
      Transition Status: COMPLETE
      */
-    private final ObjectProperty<BackgroundFill> backgroundFill = new SimpleObjectProperty<BackgroundFill>();
+    private static final String CORNER_RADII_ARC = "cornerRadiiArc";
+    
+    private final ObjectProperty<BackgroundFill> backgroundFill = new SimpleObjectProperty<>();
 
     public BackgroundFill getBackgroundFill() {
         return backgroundFill.get();
@@ -66,13 +65,12 @@ public class BackgroundLayer extends StackPane {
 
     public BackgroundLayer(BackgroundFill fill) {
         backgroundFill.set(fill);
-        backgroundFill.addListener(new ChangeListener<BackgroundFill>() {
-
-            @Override
-            public void changed(ObservableValue<? extends BackgroundFill> observable, BackgroundFill oldValue, BackgroundFill newValue) {
-                updateBackgroundFill();
-            }
-        });
+        backgroundFill.addListener(
+                (ObservableValue<? extends BackgroundFill> observable,
+                        BackgroundFill oldValue,
+                        BackgroundFill newValue) -> {
+                    updateBackgroundFill();
+                });
 
         initArcs();
         setSnapToPixel(false);
@@ -113,7 +111,7 @@ public class BackgroundLayer extends StackPane {
         setDisabled(b);
     }
 
-    protected void initArcs() {
+    private void initArcs() {
         //top-left arc
         CornerRadii radii = backgroundFill.get().getRadii();
 
@@ -122,7 +120,7 @@ public class BackgroundLayer extends StackPane {
 
         arcTL = new Arc(0, 0, hr, vr, 90, 90);
         arcTL.setType(ArcType.ROUND);
-        arcTL.getStyleClass().add("cornerRadiiArc");
+        arcTL.getStyleClass().add(CORNER_RADII_ARC);
 
         getChildren().add(arcTL);
         setAlignment(arcTL, Pos.TOP_LEFT);
@@ -132,7 +130,7 @@ public class BackgroundLayer extends StackPane {
         vr = radii.getTopRightVerticalRadius();
         arcTR = new Arc(0, 0, hr, vr, 0, 90);
         arcTR.setType(ArcType.ROUND);
-        arcTR.getStyleClass().add("cornerRadiiArc");
+        arcTR.getStyleClass().add(CORNER_RADII_ARC);
 
         getChildren().add(arcTR);
         setAlignment(arcTR, Pos.TOP_RIGHT);
@@ -142,7 +140,7 @@ public class BackgroundLayer extends StackPane {
         vr = radii.getBottomRightVerticalRadius();
         arcBR = new Arc(0, 0, hr, vr, 270, 90);
         arcBR.setType(ArcType.ROUND);
-        arcBR.getStyleClass().add("cornerRadiiArc");
+        arcBR.getStyleClass().add(CORNER_RADII_ARC);
 
         getChildren().add(arcBR);
         setAlignment(arcBR, Pos.BOTTOM_RIGHT);
@@ -152,7 +150,7 @@ public class BackgroundLayer extends StackPane {
         vr = radii.getBottomLeftVerticalRadius();
         arcBL = new Arc(0, 0, hr, vr, 180, 90);
         arcBL.setType(ArcType.ROUND);
-        arcBL.getStyleClass().add("cornerRadiiArc");
+        arcBL.getStyleClass().add(CORNER_RADII_ARC);
 
         getChildren().add(arcBL);
         setAlignment(arcBL, Pos.BOTTOM_LEFT);
@@ -191,7 +189,7 @@ public class BackgroundLayer extends StackPane {
         double top, bottom, f = 1, mul = 1;
 
         //Firstly apply the radii specified in backgroundRadii to the arcs
-        //for horizontal component
+        //for horizontal component m = w for percentage values
         if (radii.isTopLeftHorizontalRadiusAsPercentage()) {
             mul = w;
         }
@@ -213,7 +211,7 @@ public class BackgroundLayer extends StackPane {
         arcBL.setRadiusX(radii.getBottomLeftHorizontalRadius() * mul);
         mul = 1;
 
-        //for vertical components
+        //for vertical components m = h for percentage values
         if (radii.isTopLeftVerticalRadiusAsPercentage()) {
             mul = h;
         }
@@ -236,6 +234,7 @@ public class BackgroundLayer extends StackPane {
         }
         arcBL.setRadiusY(radii.getBottomLeftVerticalRadius() * mul);
 
+        //Check if these radii dont exceed the layout bounds
         //calculate the least value of f for horizontal component
         top = arcTL.getRadiusX() + arcTR.getRadiusX();
         bottom = arcBL.getRadiusX() + arcBR.getRadiusX();
@@ -249,6 +248,7 @@ public class BackgroundLayer extends StackPane {
         bottom = arcTR.getRadiusY() + arcBR.getRadiusY();
         top = top > bottom ? top : bottom;
         bottom = h / top;
+        //choose the smaller value between horizontal and vertical f
         f = f < bottom ? f : bottom;
         if (f < 1 && f > 0) {
             resizeArcs(f);
@@ -293,8 +293,10 @@ public class BackgroundLayer extends StackPane {
             }
 
             if (cur != null) {
-
-                setBackgroundFill(new BackgroundFill(backgroundFill.get().getFill(), backgroundFill.get().getRadii(), cur));
+                setBackgroundFill(new BackgroundFill(
+                        backgroundFill.get().getFill(),
+                        backgroundFill.get().getRadii(),
+                        cur));
             }
         }
 
