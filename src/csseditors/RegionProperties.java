@@ -21,6 +21,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
@@ -37,7 +38,7 @@ public class RegionProperties extends AnchorPane {
     private ListView<BackgroundFill> bgFillList;
 
     @FXML
-    private VBox bgFillEditorPane;
+    private Pane bgFillEditorPane;
 
     private ObjectProperty<Background> background;
     private ObjectProperty<BackgroundFill> currentBgFill;

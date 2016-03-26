@@ -5,6 +5,7 @@
  */
 package csseditors;
 
+import java.util.Map;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
@@ -25,6 +26,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
@@ -39,7 +41,7 @@ public class RadialGradientEditor extends GradientEditor {
      */
     Region rCenter, rFocus, rRadius;
     Line line;
-    Circle circle;
+    Ellipse ellipse;
     StackPane add;
 
     ComboBox<CycleMethod> cycleMethodBox;
@@ -61,7 +63,7 @@ public class RadialGradientEditor extends GradientEditor {
         rFocus = new Region();
         rRadius = new Region();
         line = new Line();
-        circle = new Circle();
+        ellipse = new Ellipse();
         add = new StackPane();
         sRadius = new Slider(0, 1, radius);
         sFocus = new Slider(-1, 1, focus);
@@ -79,14 +81,14 @@ public class RadialGradientEditor extends GradientEditor {
         line.getStyleClass().add("line");
 
         Rectangle clip = new Rectangle();
-        clip.widthProperty().bind(unitBox.widthProperty());
-        clip.heightProperty().bind(unitBox.heightProperty());
-        unitBox.setClip(clip);
-        unitBox.getChildren().addAll(line, circle, add, rCenter, rFocus, rRadius);
-        unitBox.addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
-        unitBox.addEventHandler(MouseEvent.MOUSE_MOVED, moved);
-        //unitBox.addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, onExitStop);
-        new CenterDraggable().drag(unitBox);
+        clip.widthProperty().bind(widthProperty());
+        clip.heightProperty().bind(heightProperty());
+        setClip(clip);
+        getChildren().addAll(line, ellipse, add, rCenter, rFocus, rRadius);
+        addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
+        addEventHandler(MouseEvent.MOUSE_MOVED, moved);
+        //addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, onExitStop);
+        new CenterDraggable().drag(this);
 
         addStop(new Stop(0, Color.BLACK));
         addStop(new Stop(1, Color.web("001a80")));
@@ -95,10 +97,10 @@ public class RadialGradientEditor extends GradientEditor {
         showEndPoints(false);
         //test
 
-        circle.setStroke(Color.RED);
-        circle.setFill(Color.TRANSPARENT);
+        ellipse.setStroke(Color.RED);
+        ellipse.setFill(Color.TRANSPARENT);
         //circle.setVisible(false);
-        circle.setMouseTransparent(true);
+        ellipse.setMouseTransparent(true);
         add.getStyleClass().add("add");
 
     }
@@ -106,9 +108,9 @@ public class RadialGradientEditor extends GradientEditor {
     //<editor-fold defaultstate="collapsed" desc="stopLayout">
     @Override
     protected double stopLayoutX(double t) {
-        double r = radius * unitBox.getWidth();
+        double r = radius * getWidth();
         double cos = Math.cos(Math.toRadians(focusAngle));
-        double fx = r * focus * cos + centerX * unitBox.getWidth();
+        double fx = r * focus * cos + centerX * getWidth();
         double deltax = r * (1 + Math.abs(focus)) * cos;
         deltax = focus < 0 ? deltax : -deltax;
 
@@ -118,9 +120,9 @@ public class RadialGradientEditor extends GradientEditor {
 
     @Override
     protected double stopLayoutY(double t) {
-        double r = radius * unitBox.getWidth();
+        double r = radius * getHeight();
         double sin = Math.sin(Math.toRadians(focusAngle));
-        double fy = r * focus * sin + centerY * unitBox.getHeight();
+        double fy = r * focus * sin + centerY * getHeight();
         double deltay = r * (1 + Math.abs(focus)) * sin;
         deltay = focus < 0 ? deltay : -deltay;
 
@@ -130,11 +132,11 @@ public class RadialGradientEditor extends GradientEditor {
 //</editor-fold>
 
     @Override
-    protected void layoutUnitBoxContents() {
-        //layoutStops();
+    protected void layoutChildren() {
+        super.layoutChildren();
         rCenter.relocate(
-                centerX * unitBox.getWidth() - rCenter.getWidth() / 2,
-                centerY * unitBox.getHeight() - rCenter.getHeight() / 2);
+                centerX * getWidth() - rCenter.getWidth() / 2,
+                centerY * getHeight() - rCenter.getHeight() / 2);
         rFocus.relocate(
                 stopLayoutX(0) - rFocus.getWidth() / 2,
                 stopLayoutY(0) - rFocus.getHeight() / 2);
@@ -148,7 +150,7 @@ public class RadialGradientEditor extends GradientEditor {
         updatePreview();
 
         /*//test
-         circle.setRadius(radius * mouseOffset * unitBox.getWidth());
+         circle.setRadius(radius * mouseOffset * getWidth());
          double focus = this.focus < 0 ? -this.focus : this.focus;
          circle.setCenterX(stopLayoutX(focus * mouseOffset / (1 + focus)));
          circle.setCenterY(stopLayoutY(focus * mouseOffset / (1 + focus)));
@@ -165,10 +167,10 @@ public class RadialGradientEditor extends GradientEditor {
      * reflected
      */
     private double getMouseOffset(double mx, double my) {
-        double fx = stopLayoutX(0);
-        double fy = stopLayoutY(0);
-        double cx = centerX * unitBox.getWidth();
-        double cy = centerY * unitBox.getHeight();
+        double fx = stopLayoutX(0); //focus x
+        double fy = stopLayoutY(0); //focus y
+        double cx = centerX * getWidth();
+        double cy = centerY * getHeight();
 
         double mfx = mx - fx;
         double mfy = my - fy;
@@ -177,7 +179,7 @@ public class RadialGradientEditor extends GradientEditor {
 
         double A = (mfx * mfx) + (mfy * mfy);
         double B = 2 * (mfx * fcx + mfy * fcy);
-        double C = (fcx * fcx) + (fcy * fcy) - radius * radius * unitBox.getWidth() * unitBox.getHeight();
+        double C = (fcx * fcx) + (fcy * fcy) - radius * radius * getWidth() * getHeight();
         double D = B * B - 4 * A * C;
 
         if (D >= 0) {
@@ -236,13 +238,13 @@ public class RadialGradientEditor extends GradientEditor {
                 radius,
                 proportional.get(),
                 cycleMethod.get(),
-                sortedStops
+                getSortedStops()
         );
-        unitBox.setBackground(new Background(new BackgroundFill(rg, CornerRadii.EMPTY, Insets.EMPTY)));
+        setBackground(new Background(new BackgroundFill(rg, CornerRadii.EMPTY, Insets.EMPTY)));
     }
 
     private void showEndPoints(boolean activate) {
-        for (StackPane p : observableStacks) {
+        for (StackPane p : stopMap.keySet()) {
             p.setDisable(activate);
 
         }
@@ -273,12 +275,12 @@ public class RadialGradientEditor extends GradientEditor {
             }
             selectedStop = p;
             if (p == null) {
-                stopList.getSelectionModel().clearSelection();
+//                listView.getSelectionModel().clearSelection();
                 return;
             }
             selectedStop.setVisible(true);
             selectedStop.setMouseTransparent(false);
-            stopList.getSelectionModel().select(stopMap.get(selectedStop));
+//            listView.getSelectionModel().select(stopMap.get(selectedStop));
         }
     }
 
@@ -291,7 +293,7 @@ public class RadialGradientEditor extends GradientEditor {
         GridPane gridPane = new GridPane();
         gridPane.addColumn(0, cycleText, radiusText, focusText, angleText);
         gridPane.addColumn(1, cycleMethodBox, sRadius, sFocus, sFocusAngle);
-        getChildren().add(1, gridPane);
+        getChildren().add(gridPane);
         gridPane.setVgap(5);
 
         cycleMethodBox.valueProperty().bindBidirectional(cycleMethod);
@@ -320,7 +322,7 @@ public class RadialGradientEditor extends GradientEditor {
             if (selectedStop != null) {
                 selectStop(null);
             }
-            unitBox.requestLayout();
+            requestLayout();
         }
     };
 //</editor-fold>
@@ -347,8 +349,8 @@ public class RadialGradientEditor extends GradientEditor {
                 return;
             }
 
-            circle.setStrokeWidth(1);
-            for (Stop observableStop : observableStops) {
+            ellipse.setStrokeWidth(1);
+            for (Stop observableStop : stopMap.values()) {
                 double delta = normalOffset - observableStop.getOffset();
                 if (Math.abs(delta) < 0.05) {
 
@@ -357,10 +359,10 @@ public class RadialGradientEditor extends GradientEditor {
                     }
                     offset -= delta;
                     selectedOffset = offset;
-                    circle.setStroke(observableStop.getColor().invert());
-                    circle.setStrokeWidth(2);
+                    ellipse.setStroke(observableStop.getColor().invert());
+                    ellipse.setStrokeWidth(2);
 
-                    StackPane p = observableStacks.get(observableStops.indexOf(observableStop));
+                    StackPane p = stopMap.entrySet().stream().filter(entry -> entry.getValue() == observableStop).findFirst().map(Map.Entry::getKey).get();
 
                     double fx = stopLayoutX(0);
                     double fy = stopLayoutY(0);
@@ -378,9 +380,10 @@ public class RadialGradientEditor extends GradientEditor {
                 }
             }
             double focus = Math.abs(RadialGradientEditor.this.focus);
-            circle.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
-            circle.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
-            circle.setRadius(radius * offset * unitBox.getWidth());
+            ellipse.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
+            ellipse.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
+            ellipse.setRadiusX(radius * offset * getWidth());
+            ellipse.setRadiusY(radius * offset * getHeight());
             add.relocate(
                     stopLayoutX(focus * offset / (1 + focus)) - add.getWidth() / 2,
                     stopLayoutY(focus * offset / (1 + focus)) - add.getHeight() / 2
@@ -425,28 +428,28 @@ public class RadialGradientEditor extends GradientEditor {
             if (event.getTarget() == rFocus) {
                 double x = event.getX();
                 double y = event.getY();
-                double cx = centerX * unitBox.getWidth();
-                double cy = centerY * unitBox.getHeight();
+                double cx = centerX * getWidth();
+                double cy = centerY * getHeight();
 
                 double theta = Math.toDegrees(Math.atan2(y - cy, x - cx));
                 double f = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-                f = f / radius / unitBox.getWidth();
+                f = f / radius / getWidth();
                 f = f > 1 ? 1 : f;
                 focus = f;
                 focusAngle = theta;
                 updateUIControls();
-                unitBox.requestLayout();
+                requestLayout();
 
             } else if (event.getTarget() == rRadius) {
-                double dx = event.getX() / unitBox.getWidth() - centerX;
-                double dy = event.getY() / unitBox.getHeight() - centerY;
+                double dx = event.getX() / getWidth() - centerX;
+                double dy = event.getY() / getHeight() - centerY;
 
                 focusAngle = Math.toDegrees(Math.atan2(-dy, -dx));
                 dx = Math.sqrt((dx * dx) + (dy * dy));
                 dx = dx > 1 ? 1 : dx;
                 radius = dx;
                 updateUIControls();
-                unitBox.requestLayout();
+                requestLayout();
 
             } else if (event.getTarget() instanceof StackPane) {
                 //update the offset of the dragged stop
@@ -461,8 +464,8 @@ public class RadialGradientEditor extends GradientEditor {
 
             } else if (selectedStop != null) {
                 //adjust focus and focusAngle
-                double x = (scx + dragX) / unitBox.getWidth() - centerX;
-                double y = (scy + dragY) / unitBox.getHeight() - centerY;
+                double x = (scx + dragX) / getWidth() - centerX;
+                double y = (scy + dragY) / getHeight() - centerY;
                 double d = Math.sqrt(x * x + y * y) / radius;
                 double t = 1 - offset;
                 double f = d / t;
@@ -472,27 +475,28 @@ public class RadialGradientEditor extends GradientEditor {
                 focus = f;
                 f = Math.abs(f);
 
-                circle.setCenterX(stopLayoutX(f * offset / (1 + f)));
-                circle.setCenterY(stopLayoutY(f * offset / (1 + f)));
-                circle.setRadius(radius * offset * unitBox.getWidth());
+                ellipse.setCenterX(stopLayoutX(f * offset / (1 + f)));
+                ellipse.setCenterY(stopLayoutY(f * offset / (1 + f)));
+                ellipse.setRadiusX(radius * offset * getWidth());
+                ellipse.setRadiusY(radius * offset * getHeight());
                 add.relocate(
                         stopLayoutX(f * offset / (1 + f)) - add.getWidth() / 2,
                         stopLayoutY(f * offset / (1 + f)) - add.getHeight() / 2
                 );
                 selectedStop.setVisible(false);
                 updateUIControls();
-                unitBox.requestLayout();
+                requestLayout();
 
             } else { //drag center
 
-                centerX = cx + dragX / unitBox.getWidth();
-                centerY = cy + dragY / unitBox.getHeight();
+                centerX = cx + dragX / getWidth();
+                centerY = cy + dragY / getHeight();
                 centerX = centerX > 1 ? 1 : centerX < 0 ? 0 : centerX;
                 centerY = centerY > 1 ? 1 : centerY < 0 ? 0 : centerY;
 
-                unitBox.requestLayout();
-                //unitBox.setTranslateX(-dragX);
-                //unitBox.setTranslateY(-dragY);
+                requestLayout();
+                //setTranslateX(-dragX);
+                //setTranslateY(-dragY);
 
             }
         }

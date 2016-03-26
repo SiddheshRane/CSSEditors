@@ -17,24 +17,20 @@ import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 
 /**
+ * A {@code BackgroundLayer} contains insets, corner radii and background color
+ * for one of several fills in a Background.
  *
  * @author Siddhesh
  */
 public class BackgroundLayer extends StackPane {
 
-    /*
-     Currently this class uses 3 different ObjectProperty for Insets ,Paint 
-     and CornerRadii of a BackgroundFill.However any change to these properies 
-     that is not made using the coresponding setter functions of this class will 
-     not result in updation of the BackgroundFill. 
-    
-     The class is currently in transition phase.
-     The 3 properties will be replaced with a single ObjectProperty<BackgroundFill>
-    
-     Transition Status: COMPLETE
-     */
     private static final String CORNER_RADII_ARC = "cornerRadiiArc";
-    
+
+    //<editor-fold defaultstate="collapsed" desc="backgroundFill property">
+    /**
+     * The {@code BackgroundFill} that is being edited. Users should bind to
+     * this property to listen to changes
+     */
     private final ObjectProperty<BackgroundFill> backgroundFill = new SimpleObjectProperty<>();
 
     public BackgroundFill getBackgroundFill() {
@@ -48,6 +44,7 @@ public class BackgroundLayer extends StackPane {
     public ObjectProperty<BackgroundFill> backgroundFillProperty() {
         return backgroundFill;
     }
+//</editor-fold>
 
     Background original;
     Background current;
@@ -56,7 +53,6 @@ public class BackgroundLayer extends StackPane {
 
     public BackgroundLayer() {
         this(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY);
-
     }
 
     public BackgroundLayer(Paint paint, CornerRadii radii, Insets insets) {
@@ -74,11 +70,11 @@ public class BackgroundLayer extends StackPane {
 
         initArcs();
         setSnapToPixel(false);
+        setPickOnBounds(false);
         original = current;
     }
 
     public void updateBackgroundFill() {
-
         setPadding(backgroundFill.get().getInsets());
         current = new Background(backgroundFill.get());
         setBackground(current);
@@ -155,7 +151,6 @@ public class BackgroundLayer extends StackPane {
         getChildren().add(arcBL);
         setAlignment(arcBL, Pos.BOTTOM_LEFT);
 
-        //experimental
         InsetsDraggable draggable = new InsetsDraggable();
         draggable.drag(arcTL);
         draggable.drag(arcTR);
@@ -189,7 +184,7 @@ public class BackgroundLayer extends StackPane {
         double top, bottom, f = 1, mul = 1;
 
         //Firstly apply the radii specified in backgroundRadii to the arcs
-        //for horizontal component m = w for percentage values
+        //for horizontal component mul = w for percentage values
         if (radii.isTopLeftHorizontalRadiusAsPercentage()) {
             mul = w;
         }

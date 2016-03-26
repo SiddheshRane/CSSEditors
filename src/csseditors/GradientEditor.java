@@ -6,143 +6,145 @@
 package csseditors;
 
 import java.util.Comparator;
-import java.util.Map;
-import javafx.beans.Observable;
+import java.util.HashMap;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.ListView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 
 /**
- * An abstract superclass for GUI components that edit gradient colors
- * containing {@link javafx.scene.paint.Stop}s. Provides methods for adding
- * ,deleting and updating {@link Stop}s.
+ * A container for layout of visual nodes representing
+ * {@link javafx.scene.paint.Stop}s in gradient colors. Provides methods for
+ * adding, deleting, updating and sorting Stops. The sorted stops can directly
+ * be used in either {@link  LinearGradient} or {@link RadialGradient}
  *
  * @author Siddhesh
  */
-public abstract class GradientEditor extends VBox {
+public abstract class GradientEditor extends Pane {
 
     //maps Stops to their visual nodes
-    ObservableMap<StackPane, Stop> stopMap;
-    //List of Stops
-    ObservableList<Stop> observableStops;
-    //list of StackPane nodes used to visually represent Stops
-    ObservableList<StackPane> observableStacks;
-    /*
-     A list of Stop objects sorted according to their offset in ascending order.
-     It is used to set data model for stopList and to construct the final
-     Gradient.
-     */
-    SortedList<Stop> sortedStops;
+    protected HashMap<StackPane, Stop> stopMap;
+    private ObservableList<Stop> stops;
+    private SortedList<Stop> sortedStops;
+    private boolean sortedStopsSynced = false;
 
-    /*
-     * UI COMPONENTS
-     */
+    private static final CornerRadii ROUND = new CornerRadii(50, true);
+
     //A ListView showing the list of stops in ascending order of their offset
-    ListView<Stop> stopList;
-
+//    ListView<Stop> listView; //TODO:add somewhere else
     //Square shape holder for Gradient preview and editor
-    protected Pane unitBox = new Pane() {
-        {
-            getStyleClass().add("unit-box");
-            setSnapToPixel(true);
-            setMinSize(150, 150);
-        }
-
-        @Override
-        public Orientation getContentBias() {
-            return Orientation.HORIZONTAL;
-        }
-
-        @Override
-        protected double computePrefHeight(double width) {
-            return width;
-        }
-
-        @Override
-        protected double computeMaxHeight(double width) {
-            return width;
-        }
-
-        @Override
-        protected void layoutChildren() {
-            super.layoutChildren();
-            layoutUnitBoxContents();
-        }
-    };
-
+   
+   /* protected Pane unitBox = new Pane() {
+   {
+   getStyleClass().add("unit-box");
+   setSnapToPixel(true);
+   setMinSize(150, 150);
+   }
+   
+   @Override
+   public Orientation getContentBias() {
+   return Orientation.HORIZONTAL;
+   }
+   
+   @Override
+   protected double computePrefHeight(double width) {
+   return width;
+   }
+   
+   @Override
+   protected double computeMaxHeight(double width) {
+   return width;
+   }
+   
+   @Override
+   protected void layoutChildren() {
+   super.layoutChildren();
+   layoutUnitBoxContents();
+   }
+   };*/
     protected final ObjectProperty<CycleMethod> cycleMethod = new SimpleObjectProperty<>(CycleMethod.NO_CYCLE);
     protected final BooleanProperty proportional = new SimpleBooleanProperty(true);
 
+    ListChangeListener<Stop> lcl = new ListChangeListener<Stop>() {
+        @Override
+        public void onChanged(ListChangeListener.Change<? extends Stop> c) {
+            System.out.println("List:" + (c.getList() == stops ? "sortedStops" : "sorted"));
+
+            while (c.next()) {
+                if (c.wasPermutated()) {
+                    System.out.print("Permutated ");
+                }
+                if (c.wasAdded()) {
+                    System.out.print("Added ");
+                }
+                if (c.wasRemoved()) {
+                    System.out.print("Removed ");
+                }
+                if (c.wasReplaced()) {
+                    System.out.print("Replaced ");
+                }
+                if (c.wasUpdated()) {
+                    System.out.print("Updated ");
+                }
+                System.out.println();
+//                    sorted.stream().mapToDouble(Stop::getOffset).forEach(d -> System.out.print(d+","));
+            }
+        }
+    };
+
     public GradientEditor() {
+        stopMap = new HashMap<>(7);
+        stops = FXCollections.observableArrayList();
+        sortedStops = stops.sorted(Comparator.comparingDouble(Stop::getOffset));
+
         //initialise
-        stopMap = FXCollections.observableHashMap();
-        observableStops = FXCollections.observableArrayList();
-        observableStacks = FXCollections.observableArrayList();
-        sortedStops = observableStops.sorted(Comparator.comparingDouble(Stop::getOffset));
-        stopList = new ListView<>();
-
-        stopMap.addListener((Observable ob) -> {
-            observableStops.setAll(stopMap.values());
-            observableStacks.setAll(stopMap.keySet());
-
+        /* listView = new ListView<>();
+        listView.setItems(stops);
+        listView.setEditable(true);
+        listView.setPrefHeight(120);
+        listView.setMinHeight(100);
+        listView.setCellFactory((lv) -> {
+        return new StopCell();
         });
-        stopList.setItems(sortedStops);
-        stopList.setEditable(true);
-        stopList.setPrefHeight(120);
-        stopList.setMinHeight(100);
-        stopList.setCellFactory((lv) -> {
-            return new StopCell();
-        });
-        stopList.setOnEditCommit((ListView.EditEvent<Stop> b) -> {
-            int i = sortedStops.getSourceIndex(b.getIndex());
-            StackPane key = observableStacks.get(i);
-            if (stopMap.containsKey(key)) {
-                if (b.getNewValue() == null) {
-                    //delete stop
-                    deleteStop(key);
-                } else {
-                    updateStop(key, b.getNewValue());
-                }
-            }
-        });
-        stopList.addEventHandler(KeyEvent.KEY_PRESSED, (e) -> {
-            System.out.println("ev : " + e.getEventType());
-            if (e.getCode() == KeyCode.DELETE) {
-                Stop stop = stopList.getSelectionModel().getSelectedItem();
-                if (stop != null) {
-                    int index = stopList.getSelectionModel().getSelectedIndex();
-                    int i = sortedStops.getSourceIndex(index);
-                    StackPane key = observableStacks.get(i);
-                    deleteStop(key);
-                }
-            }
-        });
-
-        setFillWidth(true);
-        VBox.setVgrow(stopList, Priority.SOMETIMES);
-        getChildren().addAll(unitBox, stopList);
+        listView.setOnEditCommit((ListView.EditEvent<Stop> b) -> {
+        System.out.println(b.getIndex() + " " + stops.get(b.getIndex()) + "->" + b.getNewValue());
+        if (b.getNewValue() == null) {
+        stops.remove(b.getIndex());
+        } else {
+        stops.set(b.getIndex(), b.getNewValue());
+        }
+        });*/
+        /*   stopList.addEventHandler(KeyEvent.KEY_PRESSED, (e) -> {
+        System.out.println("ev : " + e.getEventType());
+        if (e.getCode() == KeyCode.DELETE) {
+        Stop stop = stopList.getSelectionModel().getSelectedItem();
+        if (stop != null) {
+        int index = stopList.getSelectionModel().getSelectedIndex();
+        int i = sortedStops.getSourceIndex(index);
+        StackPane key = observableStacks.get(i);
+        deleteStop(key);
+        }
+        }
+        });*/
 
         cycleMethod.addListener((o) -> {
             updatePreview();
@@ -154,6 +156,7 @@ public abstract class GradientEditor extends VBox {
 
     }
 
+//<editor-fold defaultstate="collapsed" desc="property getter/setter">
     public CycleMethod getCycleMethod() {
         return cycleMethod.get();
     }
@@ -177,26 +180,41 @@ public abstract class GradientEditor extends VBox {
     public BooleanProperty proportionalProperty() {
         return proportional;
     }
+//</editor-fold>
 
     protected StackPane addStop(Stop s) {
         StackPane stopMark = new StackPane();
         stopMark.getStyleClass().add("stop");
-        stopMark.setBackground(new Background(new BackgroundFill(s.getColor(), new CornerRadii(50, true), Insets.EMPTY)));
+        stopMark.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
+
         stopMap.put(stopMark, s);
-        unitBox.getChildren().add(stopMark);
+        stops.add(s);
+        getChildren().add(stopMark);
+        sortedStopsSynced = false;
         return stopMark;
     }
 
     public void updateStop(StackPane p, Stop s) {
-        stopMap.replace(p, s);
-        p.setBackground(new Background(new BackgroundFill(s.getColor(), new CornerRadii(50, true), Insets.EMPTY)));
+        Stop old = stopMap.replace(p, s);
+        stops.remove(old);
+        stops.add(s);
+        if (old.getOffset() == s.getOffset()) {
+            //do not sort the stops
+        }
+        sortedStopsSynced = false;
+        p.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
         layoutStop(p, s);
-        unitBox.requestLayout();
     }
 
     public void deleteStop(StackPane p) {
-        stopMap.remove(p);
-        unitBox.getChildren().remove(p);
+        Stop removed = stopMap.remove(p);
+        stops.remove(removed);
+        sortedStopsSynced = false;
+        getChildren().remove(p);
+    }
+
+    public final SortedList<Stop> getSortedStops() {
+        return sortedStops;
     }
 
     protected void layoutStop(StackPane p, Stop s) {
@@ -207,23 +225,22 @@ public abstract class GradientEditor extends VBox {
     }
 
     protected void layoutStops() {
-        for (Map.Entry<StackPane, Stop> entry : stopMap.entrySet()) {
-            StackPane stackPane = entry.getKey();
-            Stop stop = entry.getValue();
-            layoutStop(stackPane, stop);
-        }
+        stopMap.forEach((StackPane t, Stop u) -> {
+            layoutStop(t, u);
+        });
+
     }
 
     protected abstract double stopLayoutX(double t);
 
     protected abstract double stopLayoutY(double t);
 
-    protected abstract void layoutUnitBoxContents();
 
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        unitBox.resizeRelocate((getWidth() - unitBox.getHeight()) / 2, unitBox.getLayoutY(), unitBox.getHeight(), unitBox.getHeight());
+//        unitBox.resizeRelocate((getWidth() - unitBox.getHeight()) / 2, unitBox.getLayoutY(), unitBox.getWidth(), unitBox.getHeight());
+        layoutStops();
     }
 
     /**
@@ -242,16 +259,19 @@ public abstract class GradientEditor extends VBox {
 
     //Mouse Event Filtering to remove onClick event after mouse gets dragged
     boolean dragged;
-    EventHandler<MouseEvent> clickFilter = (MouseEvent event) -> {
-        EventType<? extends MouseEvent> eventType = event.getEventType();
-        if (eventType.equals(MouseEvent.MOUSE_PRESSED)) {
-            dragged = false;
-        } else if (eventType.equals(MouseEvent.MOUSE_DRAGGED)) {
-            dragged = true;
-        }
-        if (eventType.equals(MouseEvent.MOUSE_CLICKED)) {
-            if (dragged) {
-                event.consume();
+    EventHandler<MouseEvent> clickFilter = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            EventType<? extends MouseEvent> eventType = event.getEventType();
+            if (eventType.equals(MouseEvent.MOUSE_PRESSED)) {
+                dragged = false;
+            } else if (eventType.equals(MouseEvent.MOUSE_DRAGGED)) {
+                dragged = true;
+            }
+            if (eventType.equals(MouseEvent.MOUSE_CLICKED)) {
+                if (dragged) {
+                    event.consume();
+                }
             }
         }
     };

@@ -46,9 +46,7 @@ public class LinearGradientEditor extends GradientEditor {
     double startY = 0;
     double endX = 1;
     double endY = 1;
-    /*
-     * UI COMPONENTS 
-     */
+
     //control for setting startX , startY , endX , endY in LinearGradient
     Region start, end;
 
@@ -124,10 +122,10 @@ public class LinearGradientEditor extends GradientEditor {
         HBox h = new HBox(t, cycleMethodBox);
         h.getStyleClass().add("cycle-method-hbox");
         t.getStyleClass().add("cycle-method-label");
-        getChildren().add(1, h);
-        unitBox.getChildren().addAll(line, start, end);
-        unitBox.addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
-        unitBox.addEventHandler(MouseEvent.MOUSE_DRAGGED, onDrag);
+        getChildren().add( h);
+        getChildren().addAll(line, start, end);
+        addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
+        addEventHandler(MouseEvent.MOUSE_DRAGGED, onDrag);
 
         addStop(new Stop(0, Color.ALICEBLUE));
         addStop(new Stop(.3, Color.SKYBLUE));
@@ -137,8 +135,8 @@ public class LinearGradientEditor extends GradientEditor {
     @Override
     protected double stopLayoutX(double t) {
         //works only for proportional gradient
-        Insets pad = unitBox.getPadding();
-        double x = (unitBox.getWidth() - pad.getLeft() - pad.getRight())
+        Insets pad = getPadding();
+        double x = (getWidth() - pad.getLeft() - pad.getRight())
                 * (startX + t * (endX - startX))
                 + pad.getLeft();
         return x;
@@ -147,16 +145,16 @@ public class LinearGradientEditor extends GradientEditor {
     @Override
     protected double stopLayoutY(double t) {
         //works only for proportional gradient
-        Insets pad = unitBox.getPadding();
-        double y = (unitBox.getHeight() - pad.getTop() - pad.getBottom())
+        Insets pad = getPadding();
+        double y = (getHeight() - pad.getTop() - pad.getBottom())
                 * (startY + t * (endY - startY))
                 + pad.getTop();
         return y;
     }
 
     @Override
-    protected void layoutUnitBoxContents() {
-        layoutStops();
+    protected void layoutChildren() {
+        super.layoutChildren();
         start.relocate(stopLayoutX(0) - start.getWidth() / 2, stopLayoutY(0) - start.getHeight() / 2);
         end.relocate(stopLayoutX(1) - end.getWidth() / 2, stopLayoutY(1) - end.getHeight() / 2);
         line.setStartX(stopLayoutX(0));
@@ -179,19 +177,19 @@ public class LinearGradientEditor extends GradientEditor {
      */
     @Override
     protected double getOffset(double mx, double my) {
-        double m = (endY - startY) / (endX - startX);
+        double m = (endY - startY) / (endX - startX)*getHeight()/getWidth();
         double offset;
-        Insets p = unitBox.getPadding();
+        Insets p = getPadding();
 
         if (m == 0) {
-            offset = (mx - p.getLeft()) / (unitBox.getWidth() - p.getLeft() - p.getRight());
+            offset = (mx - p.getLeft()) / (getWidth() - p.getLeft() - p.getRight());
             if (startX > endX) {
                 offset = 1 - offset;
             }
         } else if (m == Double.POSITIVE_INFINITY) {
-            offset = (my - p.getTop()) / (unitBox.getHeight() - p.getTop() - p.getBottom());
+            offset = (my - p.getTop()) / (getHeight() - p.getTop() - p.getBottom());
         } else if (m == Double.NEGATIVE_INFINITY) {
-            offset = 1 - (my - p.getTop()) / (unitBox.getHeight() - p.getTop() - p.getBottom());
+            offset = 1 - (my - p.getTop()) / (getHeight() - p.getTop() - p.getBottom());
         } else {
             double x1 = stopLayoutX(0);
             double y1 = stopLayoutY(0);
@@ -202,9 +200,9 @@ public class LinearGradientEditor extends GradientEditor {
 
             offset = x - x1;
             offset /= (endX - startX)
-                    * (unitBox.getWidth()
-                    - unitBox.getPadding().getLeft()
-                    - unitBox.getPadding().getRight());
+                    * (getWidth()
+                    - getPadding().getLeft()
+                    - getPadding().getRight());
         }
 
         if (offset > 1) {
@@ -217,16 +215,15 @@ public class LinearGradientEditor extends GradientEditor {
 
     @Override
     public void updatePreview() {
-        LinearGradient lg = new LinearGradient(startX, startY, endX, endY, proportional.get(), cycleMethod.get(), sortedStops);
-
+        LinearGradient lg = new LinearGradient(startX, startY, endX, endY, proportional.get(), cycleMethod.get(), getSortedStops());
         gradient.set(lg);
-        unitBox.setBackground(new Background(new BackgroundFill(lg, CornerRadii.EMPTY, unitBox.getPadding())));
+        setBackground(new Background(new BackgroundFill(lg, CornerRadii.EMPTY, getPadding())));
 
     }
 
     private void enableEndPoints(boolean activate) {
 
-        for (StackPane p : observableStacks) {
+        for (StackPane p : stopMap.keySet()) {
             p.setDisable(activate);
         }
         start.toFront();
@@ -238,68 +235,74 @@ public class LinearGradientEditor extends GradientEditor {
         line.setDisable(activate);
     }
 
-    EventHandler<MouseEvent> onClick = (MouseEvent event) -> {
-        //check for right click(context menu)
-        System.out.println("Buttons Clicked: " + event.getButton());
-        if (event.getButton() == MouseButton.SECONDARY) {
-            System.out.println("Popup Trigger!");
-            showingEndPoints = !showingEndPoints;
-            enableEndPoints(showingEndPoints);
+    EventHandler<MouseEvent> onClick = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            //check for right click(context menu)
+            System.out.println("Buttons Clicked: " + event.getButton());
+            if (event.getButton() == MouseButton.SECONDARY) {
+                System.out.println("Popup Trigger!");
+                showingEndPoints = !showingEndPoints;
+                enableEndPoints(showingEndPoints);
 
-        } else if (showingEndPoints) {
-        } else if (event.getTarget() instanceof StackPane) {
-            //If the mouse is clicked on an existing stop then make it the current selection
-            StackPane p = (StackPane) event.getTarget();
-            if (stopMap.containsKey(p)) {
-                stopList.getSelectionModel().select(stopMap.get(p));
+            } else if (showingEndPoints) {
+            } else if (event.getTarget() instanceof StackPane) {
+                //If the mouse is clicked on an existing stop then make it the current selection
+                StackPane p = (StackPane) event.getTarget();
+                if (stopMap.containsKey(p)) {
+                    //   listView.getSelectionModel().select(stopMap.get(p));
+                }
+            } else {
+                //Mouse is clicked on empty region.So add a new stop at the particular offset.
+                double offset = getOffset(event.getX(), event.getY());
+                addStop(new Stop(offset, Color.WHITESMOKE));
             }
-        } else {
-            //Mouse is clicked on empty region.So add a new stop at the particular offset.
-            double offset = getOffset(event.getX(), event.getY());
-            addStop(new Stop(offset, Color.WHITESMOKE));
         }
     };
 
-    EventHandler<MouseEvent> onDrag = (MouseEvent event) -> {
-        if (event.getTarget() == start || event.getTarget() == end) {
-            //start or end have been dragged.
-            //These correspond to startX, startY ,endX,endY in LG.
-            Insets p = unitBox.getPadding();
-            Point2D mouseLocal = unitBox.sceneToLocal(event.getSceneX(), event.getSceneY());
-            double x = (mouseLocal.getX() - p.getLeft()) / (unitBox.getWidth() - p.getLeft() - p.getRight());
+    EventHandler<MouseEvent> onDrag = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            if (event.getTarget() == start || event.getTarget() == end) {
+                //start or end have been dragged.
+                //These correspond to startX, startY ,endX,endY in LG.
+                Insets p = getPadding();
+                Point2D mouseLocal = sceneToLocal(event.getSceneX(), event.getSceneY());
+                double x = (mouseLocal.getX() - p.getLeft()) / (getWidth() - p.getLeft() - p.getRight());
 
-            if (x > 1) {
-                x = 1;
-            } else if (x < 0) {
-                x = 0;
+                if (x > 1) {
+                    x = 1;
+                } else if (x < 0) {
+                    x = 0;
+                }
+
+                double y = (mouseLocal.getY() - p.getTop()) / (getHeight() - p.getTop() - p.getBottom());
+                if (y > 1) {
+                    y = 1;
+                } else if (y < 0) {
+                    y = 0;
+                }
+
+                if (event.getTarget() == start) {
+                    startX = x;
+                    startY = y;
+                } else if (event.getTarget() == end) {
+                    endX = x;
+                    endY = y;
+                }
+
+                requestLayout();
+
+            } else if (event.getTarget() instanceof StackPane) {
+                //update the offset of the dragged stop
+                StackPane p = (StackPane) event.getTarget();
+                Stop s = stopMap.get(p);
+                if (s == null) {
+                    return;
+                }
+                double offset = getOffset(event.getX(), event.getY());
+                updateStop(p, new Stop(offset, s.getColor()));
             }
-
-            double y = (mouseLocal.getY() - p.getTop()) / (unitBox.getHeight() - p.getTop() - p.getBottom());
-            if (y > 1) {
-                y = 1;
-            } else if (y < 0) {
-                y = 0;
-            }
-
-            if (event.getTarget() == start) {
-                startX = x;
-                startY = y;
-            } else if (event.getTarget() == end) {
-                endX = x;
-                endY = y;
-            }
-
-            unitBox.requestLayout();
-
-        } else if (event.getTarget() instanceof StackPane) {
-            //update the offset of the dragged stop
-            StackPane p = (StackPane) event.getTarget();
-            Stop s = stopMap.get(p);
-            if (s == null) {
-                return;
-            }
-            double offset = getOffset(event.getX(), event.getY());
-            updateStop(p, new Stop(offset, s.getColor()));
         }
     };
 
@@ -349,7 +352,7 @@ public class LinearGradientEditor extends GradientEditor {
             proportionalField.selectedProperty().bindBidirectional(proportional);
 
             Tab stopTab = new Tab("Stops");
-            stopTab.setContent(stopList);
+            //stopTab.setContent(listView);
             getTabs().add(stopTab);
             LinearGradientEditor.this.getChildren().add(this);
 

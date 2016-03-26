@@ -5,6 +5,8 @@
  */
 package csseditors;
 
+import java.util.ArrayList;
+import java.util.List;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -15,10 +17,12 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -33,14 +37,17 @@ public class CSSEditors extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-
+        /*
+        uncomment any one to play its demo
+         */
 //        backgroundFillEditorTest(primaryStage);
 //        regionPropertiesTest(primaryStage);
 //        colorRectPaneTest(primaryStage);
 //        linearGradientEditorTest(primaryStage);
-        stopCellTest(primaryStage);
+//        stopCellTest(primaryStage);
 //        LinearGradientEditorTest(primaryStage);
-//        RadialGradientEditorTest(primaryStage);
+        RadialGradientEditorTest(primaryStage);
+//        backgroundLayerTest(primaryStage);
     }
 
     public void backgroundFillEditorTest(Stage s) {
@@ -57,7 +64,9 @@ public class CSSEditors extends Application {
         });
         layer.layoutXProperty().bind(b.layoutXProperty());
         layer.layoutYProperty().bind(b.layoutYProperty());
-        
+        layer.prefWidthProperty().bind(b.widthProperty());
+        layer.prefHeightProperty().bind(b.heightProperty());
+
         BackgroundFillEditor editor = new BackgroundFillEditor(layer.backgroundFillProperty());
 
         Group g = new Group(layer);
@@ -65,7 +74,7 @@ public class CSSEditors extends Application {
         layer.setScaleY(4);
 
         box.getChildren().addAll(b, editor, g);
-        box.setAlignment(Pos.CENTER);
+        box.setAlignment(Pos.TOP_CENTER);
 
         Scene scene = new Scene(box);
         scene.getStylesheets().add("/csseditors/csseditors.css");
@@ -83,7 +92,7 @@ public class CSSEditors extends Application {
         RegionProperties rp = new RegionProperties();
         rp.registerNode(but);
 
-        VBox box = new VBox(rp, new Group(but));
+        Pane box = new VBox(rp, new Group(but));
         Scene scene = new Scene(box);
         s.setTitle("RegionProperties Test");
         s.setScene(scene);
@@ -165,6 +174,36 @@ public class CSSEditors extends Application {
         Scene scene = new Scene(pane);
         s.setScene(scene);
         s.setTitle("StopCell Test");
+        s.show();
+    }
+
+    public void backgroundLayerTest(Stage s) {
+        Button test = new Button(" ");
+        //add the button to group to turn its transform into layout
+        StackPane stack = new StackPane(test);
+        Group g = new Group(stack);
+        stack.setScaleX(6);
+        stack.setScaleY(6);
+        //add everything to a ScrollPane
+        ScrollPane scrollPane = new ScrollPane(g);
+        Scene scene = new Scene(scrollPane);
+        //apply css to the button
+        scrollPane.layout();
+        scrollPane.applyCss();
+        scrollPane.setPrefSize(400, 400);
+        //get all bgfills of the button
+        List<BackgroundFill> fills = test.getBackground().getFills();
+        List<BackgroundLayer> bglayers = new ArrayList<>(fills.size());
+        for (BackgroundFill fill : fills) {
+            //create a BackgroundLayer for each BackgroundFill
+            BackgroundLayer bglayer = new BackgroundLayer(fill);
+            bglayers.add(bglayer);
+            stack.getChildren().add(bglayer);
+        }
+        scene.getStylesheets().add("/csseditors/csseditors.css");
+        s.setScene(scene);
+        scrollPane.autosize();
+        s.setTitle("BackgroundLayer Test");
         s.show();
     }
 

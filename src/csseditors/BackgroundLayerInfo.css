@@ -12,7 +12,7 @@
     -fx-backgroundinsets : 0;
     -fx-background-radius:0;
 
-    -fx-border-color:-csfx-theme; /*/#f48eed;*/
+    -fx-border-color:#f48eed;
     -fx-border-radius : 0;
 
     -fx-padding : 0;
@@ -30,7 +30,7 @@
 .slider {
 
     -fx-background-color:#a6dde7;
-    
+
 
 }
 .slider .track{
@@ -45,12 +45,16 @@
     -fx-background-color: #f48eed , white ;
     -fx-background-insets : 0 , 1;
     -fx-background-radius:0;
-    
+
 
 }
 
 .slider .thumb:hover {
     -fx-background-insets : 0 , 2;
+}
+
+.bg-image {
+    -fx-background-color: linear-gradient(from 0px 0px to 100px 0px, green, yellow, orange, red);
 }
 
 

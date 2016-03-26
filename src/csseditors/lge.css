@@ -9,7 +9,7 @@ and open the template in the editor.
 */
 * {
     -fx-border-variable-color : black;
-    
+
 }
 .end {
     -fx-pref-width : 10;
@@ -36,8 +36,6 @@ and open the template in the editor.
     -fx-border-radius: 12;
     -fx-pref-width:10;
     -fx-pref-height:10;
-    //-fx-scale-x : 0.5;
-    //-fx-scale-y : 0.5;
 }
 
 .stop:disabled {
@@ -54,7 +52,7 @@ and open the template in the editor.
 }
 .unit-box{
     -fx-padding : 5;
-    -fx-border-color:coral;
+    -fx-border-color: coral;
     -fx-border-insets: 0  ;
     -fx-border-radius: 0 ;
 }
@@ -70,19 +68,14 @@ and open the template in the editor.
     -fx-alignment: center;
 }
 
-.lge{
+.lge {
     -fx-border-color : lavenderblush;
     -fx-spacing : 5;
 }
 
-
-//FOR RGE
-
 .center {
     -fx-pref-width : 6;
     -fx-pref-height:6;
-    //-fx-border-color : black;
-    //-fx-border-radius: 10;
     -fx-background-color:black;
     -fx-background-radius : 10;
 }
@@ -144,7 +137,6 @@ and open the template in the editor.
     -fx-background-color: transparent;
     -fx-min-width  :20;
 
-    // -fx-border-color: greenyellow;
 }
 .color-picker .color-picker-label{
     -fx-padding: 0;
