@@ -87,9 +87,9 @@ public class RadialGradientEditor extends GradientEditor {
         //addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, onExitStop);
         new CenterDraggable().drag(this);
 
-        addStop(new Stop(0, Color.BLACK));
-        addStop(new Stop(1, Color.web("001a80")));
-        addStop(new Stop(0.5, Color.ALICEBLUE));
+        addStop(new Stop(0, Color.RED));
+        addStop(new Stop(1, Color.GREEN));
+        addStop(new Stop(0.5, Color.YELLOW));
 
         showEndPoints(false);
         //test
