@@ -36,9 +36,6 @@ public class RadialGradientEditor extends GradientEditor {
     double centerX = 0.5, centerY = 0.5;
     double radius = 0.5, focus = 0, focusAngle = 90;
 
-    /*
-     UI COMPONENTS 
-     */
     Region rCenter, rFocus, rRadius;
     Line line;
     Ellipse ellipse;
@@ -147,6 +144,12 @@ public class RadialGradientEditor extends GradientEditor {
         line.setStartY(stopLayoutY(0));
         line.setEndX(stopLayoutX(1));
         line.setEndY(stopLayoutY(1));
+        add.relocate(mouseX - add.getWidth() / 2, mouseY - add.getHeight() / 2);
+
+        /* ellipse.setCenterX(stopLayoutX(focus * 0.5 / (1 + focus)));
+        ellipse.setCenterY(stopLayoutY(focus * 0.5 / (1 + focus)));
+        ellipse.setRadiusX(radius * 0.5 * getWidth());
+        ellipse.setRadiusY(radius * 0.5 * getHeight());*/
         updatePreview();
 
         /*//test
@@ -334,6 +337,7 @@ public class RadialGradientEditor extends GradientEditor {
 
         @Override
         public void handle(MouseEvent event) {
+
             if (selectedStop != null || event.getTarget() == hoverPane) {
                 return;
             } else if (hoverPane != null) {
@@ -341,14 +345,14 @@ public class RadialGradientEditor extends GradientEditor {
                 hoverPane.setMouseTransparent(true);
                 hoverPane = null;
             }
-
+            mouseX = event.getX();
+            mouseY = event.getY();
             double offset = getMouseOffset(event.getX(), event.getY());
             double normalOffset = getNormalisedOffset(offset);
             mouseOffset = offset;
             if (mouseOffset == 0) {
                 return;
             }
-
             ellipse.setStrokeWidth(1);
             for (Stop observableStop : stopMap.values()) {
                 double delta = normalOffset - observableStop.getOffset();
@@ -369,6 +373,8 @@ public class RadialGradientEditor extends GradientEditor {
 
                     fx = fx + offset / mouseOffset * (event.getX() - fx);
                     fy = fy + offset / mouseOffset * (event.getY() - fy);
+                    mouseX = fx;
+                    mouseY = fy;
                     p.relocate(fx - p.getWidth() / 2, fy - p.getHeight() / 2);
                     if (hoverPane == null) {
                         p.setVisible(true);
@@ -383,7 +389,7 @@ public class RadialGradientEditor extends GradientEditor {
             ellipse.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
             ellipse.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
             ellipse.setRadiusX(radius * offset * getWidth());
-            ellipse.setRadiusY(radius * offset * getHeight());
+            ellipse.setRadiusY(radius * offset * getWidth());
             add.relocate(
                     stopLayoutX(focus * offset / (1 + focus)) - add.getWidth() / 2,
                     stopLayoutY(focus * offset / (1 + focus)) - add.getHeight() / 2
