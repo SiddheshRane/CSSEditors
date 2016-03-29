@@ -174,15 +174,16 @@ public class RadialGradientEditor extends GradientEditor {
         double fy = stopLayoutY(0); //focus y
         double cx = centerX * getWidth();
         double cy = centerY * getHeight();
-
-        double mfx = mx - fx;
-        double mfy = my - fy;
-        double fcx = fx - cx;
-        double fcy = fy - cy;
+        double rx = radius * getWidth();
+        double ry = radius * getHeight();
+        double mfx = (mx - fx) / rx;
+        double mfy = (my - fy) /ry;
+        double fcx = (fx - cx) / rx;
+        double fcy = (fy - cy) / ry;
 
         double A = (mfx * mfx) + (mfy * mfy);
         double B = 2 * (mfx * fcx + mfy * fcy);
-        double C = (fcx * fcx) + (fcy * fcy) - radius * radius * getWidth() * getHeight();
+        double C = (fcx * fcx) + (fcy * fcy) - 1;
         double D = B * B - 4 * A * C;
 
         if (D >= 0) {
@@ -389,7 +390,7 @@ public class RadialGradientEditor extends GradientEditor {
             ellipse.setCenterX(stopLayoutX(focus * offset / (1 + focus)));
             ellipse.setCenterY(stopLayoutY(focus * offset / (1 + focus)));
             ellipse.setRadiusX(radius * offset * getWidth());
-            ellipse.setRadiusY(radius * offset * getWidth());
+            ellipse.setRadiusY(radius * offset * getHeight());
             add.relocate(
                     stopLayoutX(focus * offset / (1 + focus)) - add.getWidth() / 2,
                     stopLayoutY(focus * offset / (1 + focus)) - add.getHeight() / 2
