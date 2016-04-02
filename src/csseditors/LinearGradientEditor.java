@@ -87,7 +87,7 @@ public class LinearGradientEditor extends GradientEditor {
         cycleMethodBox.getStyleClass().add("cycle-method");
 
         //css styles
-        getStylesheets().add("/csseditors/lge.css");
+        getStylesheets().add("/csseditors/gradients.css");
         getStyleClass().add("lge");
         setPrefSize(200, 400);
 
@@ -161,7 +161,7 @@ public class LinearGradientEditor extends GradientEditor {
         line.setStartY(stopLayoutY(0));
         line.setEndX(stopLayoutX(1));
         line.setEndY(stopLayoutY(1));
-        updatePreview();
+        updateGradient();
     }
 
     /**
@@ -214,8 +214,8 @@ public class LinearGradientEditor extends GradientEditor {
     }
 
     @Override
-    public void updatePreview() {
-        LinearGradient lg = new LinearGradient(startX, startY, endX, endY, proportional.get(), cycleMethod.get(), getSortedStops());
+    public void updateGradient() {
+        LinearGradient lg = new LinearGradient(startX, startY, endX, endY, proportional.get(), cycleMethod.get(), getStops());
         gradient.set(lg);
         setBackground(new Background(new BackgroundFill(lg, CornerRadii.EMPTY, getPadding())));
 

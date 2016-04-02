@@ -12,9 +12,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.geometry.Insets;
@@ -42,77 +40,15 @@ public abstract class GradientEditor extends Pane {
     //maps Stops to their visual nodes
     protected HashMap<StackPane, Stop> stopMap;
     private ObservableList<Stop> stops;
-    private SortedList<Stop> sortedStops;
-    private boolean sortedStopsSynced = false;
 
     private static final CornerRadii ROUND = new CornerRadii(50, true);
 
-    //A ListView showing the list of stops in ascending order of their offset
-//    ListView<Stop> listView; //TODO:add somewhere else
-    //Square shape holder for Gradient preview and editor
-   
-   /* protected Pane unitBox = new Pane() {
-   {
-   getStyleClass().add("unit-box");
-   setSnapToPixel(true);
-   setMinSize(150, 150);
-   }
-   
-   @Override
-   public Orientation getContentBias() {
-   return Orientation.HORIZONTAL;
-   }
-   
-   @Override
-   protected double computePrefHeight(double width) {
-   return width;
-   }
-   
-   @Override
-   protected double computeMaxHeight(double width) {
-   return width;
-   }
-   
-   @Override
-   protected void layoutChildren() {
-   super.layoutChildren();
-   layoutUnitBoxContents();
-   }
-   };*/
     protected final ObjectProperty<CycleMethod> cycleMethod = new SimpleObjectProperty<>(CycleMethod.NO_CYCLE);
     protected final BooleanProperty proportional = new SimpleBooleanProperty(true);
-
-    ListChangeListener<Stop> lcl = new ListChangeListener<Stop>() {
-        @Override
-        public void onChanged(ListChangeListener.Change<? extends Stop> c) {
-            System.out.println("List:" + (c.getList() == stops ? "sortedStops" : "sorted"));
-
-            while (c.next()) {
-                if (c.wasPermutated()) {
-                    System.out.print("Permutated ");
-                }
-                if (c.wasAdded()) {
-                    System.out.print("Added ");
-                }
-                if (c.wasRemoved()) {
-                    System.out.print("Removed ");
-                }
-                if (c.wasReplaced()) {
-                    System.out.print("Replaced ");
-                }
-                if (c.wasUpdated()) {
-                    System.out.print("Updated ");
-                }
-                System.out.println();
-//                    sorted.stream().mapToDouble(Stop::getOffset).forEach(d -> System.out.print(d+","));
-            }
-        }
-    };
 
     public GradientEditor() {
         stopMap = new HashMap<>(7);
         stops = FXCollections.observableArrayList();
-        sortedStops = stops.sorted(Comparator.comparingDouble(Stop::getOffset));
 
         //initialise
         /* listView = new ListView<>();
@@ -131,7 +67,7 @@ public abstract class GradientEditor extends Pane {
         stops.set(b.getIndex(), b.getNewValue());
         }
         });*/
-        /*   stopList.addEventHandler(KeyEvent.KEY_PRESSED, (e) -> {
+ /*   stopList.addEventHandler(KeyEvent.KEY_PRESSED, (e) -> {
         System.out.println("ev : " + e.getEventType());
         if (e.getCode() == KeyCode.DELETE) {
         Stop stop = stopList.getSelectionModel().getSelectedItem();
@@ -143,9 +79,8 @@ public abstract class GradientEditor extends Pane {
         }
         }
         });*/
-
         cycleMethod.addListener((o) -> {
-            updatePreview();
+            updateGradient();
         });
 
         addEventFilter(MouseEvent.MOUSE_PRESSED, clickFilter);
@@ -179,6 +114,7 @@ public abstract class GradientEditor extends Pane {
         return proportional;
     }
 //</editor-fold>
+    private static final Comparator<Stop> STOP_COMPARATOR = Comparator.comparingDouble(Stop::getOffset);
 
     protected StackPane addStop(Stop s) {
         StackPane stopMark = new StackPane();
@@ -187,19 +123,26 @@ public abstract class GradientEditor extends Pane {
 
         stopMap.put(stopMark, s);
         stops.add(s);
+        stops.sort(STOP_COMPARATOR);
         getChildren().add(stopMark);
-        sortedStopsSynced = false;
+
         return stopMark;
     }
 
     public void updateStop(StackPane p, Stop s) {
         Stop old = stopMap.replace(p, s);
-        stops.remove(old);
-        stops.add(s);
-        if (old.getOffset() == s.getOffset()) {
-            //do not sort the stops
+        int index = stops.indexOf(old);
+        stops.set(index, s);
+
+        double newOffset = s.getOffset();
+        double floorOffset = index == 0 ? -1 : stops.get(index - 1).getOffset();
+        double ceilOffset = ++index == stops.size() ? 2 : stops.get(index).getOffset();
+        //Check if the new Stop fits in the same spot
+        if (newOffset < floorOffset || newOffset > ceilOffset) {
+            //sort the stops
+            stops.sort(STOP_COMPARATOR);
         }
-        sortedStopsSynced = false;
+
         p.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
         layoutStop(p, s);
     }
@@ -207,12 +150,12 @@ public abstract class GradientEditor extends Pane {
     public void deleteStop(StackPane p) {
         Stop removed = stopMap.remove(p);
         stops.remove(removed);
-        sortedStopsSynced = false;
+        //do not sort. List is already sorted
         getChildren().remove(p);
     }
 
-    public final SortedList<Stop> getSortedStops() {
-        return sortedStops;
+    public final ObservableList<Stop> getStops() {
+        return stops;
     }
 
     protected void layoutStop(StackPane p, Stop s) {
@@ -233,11 +176,9 @@ public abstract class GradientEditor extends Pane {
 
     protected abstract double stopLayoutY(double t);
 
-
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-//        unitBox.resizeRelocate((getWidth() - unitBox.getHeight()) / 2, unitBox.getLayoutY(), unitBox.getWidth(), unitBox.getHeight());
         layoutStops();
     }
 
@@ -253,7 +194,8 @@ public abstract class GradientEditor extends Pane {
      */
     protected abstract double getOffset(double mx, double my);
 
-    public abstract void updatePreview();
+    @Deprecated
+    public abstract void updateGradient();
 
     //Mouse Event Filtering to remove onClick event after mouse gets dragged
     boolean dragged;
