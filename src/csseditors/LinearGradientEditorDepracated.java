@@ -25,10 +25,10 @@ import javafx.scene.text.Text;
 /**
  * This class was originally written to be a linear gradient editor component
  * but the approach in this implementation was abandoned. For a working
- * implementation of a linear gradient editor refer to {@link LGE} This class is
+ * implementation of a linear gradient editor refer to {@link LinearGradientEditor} This class is
  * nowhere used in the program
  *
- * @see LGE
+ * @see LinearGradientEditor
  * @author Siddhesh
  */
 @Deprecated

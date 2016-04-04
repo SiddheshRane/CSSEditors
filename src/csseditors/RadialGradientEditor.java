@@ -6,20 +6,15 @@
 package csseditors;
 
 import java.util.Map;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Slider;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -29,7 +24,6 @@ import javafx.scene.paint.Stop;
 import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 
 public class RadialGradientEditor extends GradientEditor {
 
@@ -41,10 +35,10 @@ public class RadialGradientEditor extends GradientEditor {
     Ellipse ellipse;
     StackPane add;
 
-    @Deprecated
+    /*    @Deprecated
     ComboBox<CycleMethod> cycleMethodBox;
     @Deprecated
-    Slider sRadius, sFocus, sFocusAngle;
+    Slider sRadius, sFocus, sFocusAngle;*/
 
     //UI States
     StackPane selectedStop;
@@ -66,7 +60,7 @@ public class RadialGradientEditor extends GradientEditor {
         gradient.set(value);
     }
 
-    public ObjectProperty gradientProperty() {
+    public ObjectProperty<RadialGradient> gradientProperty() {
         return gradient;
     }
 
@@ -142,6 +136,7 @@ public class RadialGradientEditor extends GradientEditor {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
+        //TODO: this assumes proportional gradient. Rework it to support absolute layout
         rCenter.relocate(
                 centerX * getWidth() - rCenter.getWidth() / 2,
                 centerY * getHeight() - rCenter.getHeight() / 2);
@@ -289,46 +284,46 @@ public class RadialGradientEditor extends GradientEditor {
 
     //<editor-fold defaultstate="collapsed" desc="controls">
     //TODO: Shift UI Controls to a separate class
-    private void initUIControls() {
-        Text cycleText = new Text("Cycle Method");
-        Text radiusText = new Text("Radius");
-        Text focusText = new Text("Focus Distance");
-        Text angleText = new Text("Focus Angle");
-        GridPane gridPane = new GridPane();
-        gridPane.addColumn(0, cycleText, radiusText, focusText, angleText);
-        gridPane.addColumn(1, cycleMethodBox, sRadius, sFocus, sFocusAngle);
-        getChildren().add(gridPane);
-        gridPane.setVgap(5);
+    /* private void initUIControls() {
+    Text cycleText = new Text("Cycle Method");
+    Text radiusText = new Text("Radius");
+    Text focusText = new Text("Focus Distance");
+    Text angleText = new Text("Focus Angle");
+    GridPane gridPane = new GridPane();
+    gridPane.addColumn(0, cycleText, radiusText, focusText, angleText);
+    gridPane.addColumn(1, cycleMethodBox, sRadius, sFocus, sFocusAngle);
+    getChildren().add(gridPane);
+    gridPane.setVgap(5);
+    
+    cycleMethodBox.valueProperty().bindBidirectional(cycleMethod);
+    sRadius.valueProperty().addListener(controlListener);
+    sFocus.valueProperty().addListener(controlListener);
+    sFocusAngle.valueProperty().addListener(controlListener);
+    
+    sRadius.setBlockIncrement(0.1);
+    sFocus.setBlockIncrement(0.1);
+    
+    }*/
 
-        cycleMethodBox.valueProperty().bindBidirectional(cycleMethod);
-        sRadius.valueProperty().addListener(controlListener);
-        sFocus.valueProperty().addListener(controlListener);
-        sFocusAngle.valueProperty().addListener(controlListener);
-
-        sRadius.setBlockIncrement(0.1);
-        sFocus.setBlockIncrement(0.1);
-
+    /* private void updateUIControls() {
+    localChange = true;
+    sRadius.setValue(radius);
+    sFocus.setValue(focus);
+    sFocusAngle.setValue(focusAngle);
+    localChange = false;
     }
-
-    private void updateUIControls() {
-        localChange = true;
-        sRadius.setValue(radius);
-        sFocus.setValue(focus);
-        sFocusAngle.setValue(focusAngle);
-        localChange = false;
-    }
-
+    
     InvalidationListener controlListener = (Observable observable) -> {
-        if (!localChange) {
-            radius = sRadius.getValue();
-            focus = sFocus.getValue();
-            focusAngle = sFocusAngle.getValue();
-            if (selectedStop != null) {
-                selectStop(null);
-            }
-            requestLayout();
-        }
-    };
+    if (!localChange) {
+    radius = sRadius.getValue();
+    focus = sFocus.getValue();
+    focusAngle = sFocusAngle.getValue();
+    if (selectedStop != null) {
+    selectStop(null);
+    }
+    requestLayout();
+    }
+    };*/
 //</editor-fold>
 
     EventHandler<MouseEvent> moved = new EventHandler<MouseEvent>() {
@@ -410,7 +405,7 @@ public class RadialGradientEditor extends GradientEditor {
                 showingEndPoints = !showingEndPoints;
                 showEndPoints(showingEndPoints);
 
-            } else if (showingEndPoints) {
+            } else if (showingEndPoints) {//do nothing
             } else if (event.getTarget() instanceof StackPane) {
                 //If the mouse is clicked on an existing stop then make it the current selection
                 StackPane p = (StackPane) event.getTarget();

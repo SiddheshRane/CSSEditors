@@ -12,6 +12,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
@@ -49,36 +50,61 @@ public abstract class GradientEditor extends Pane {
     public GradientEditor() {
         stopMap = new HashMap<>(7);
         stops = FXCollections.observableArrayList();
-
-        //initialise
-        /* listView = new ListView<>();
-        listView.setItems(stops);
-        listView.setEditable(true);
-        listView.setPrefHeight(120);
-        listView.setMinHeight(100);
-        listView.setCellFactory((lv) -> {
-        return new StopCell();
+        stops.addListener(new ListChangeListener<Stop>() {
+            @Override
+            public void onChanged(ListChangeListener.Change<? extends Stop> c) {
+                
+                while (c.next()) {
+                    if (c.wasReplaced()) {
+                        //check whether the replaced Stop needs sorting
+                        Stop old = c.getRemoved().get(0);
+                        Stop now = stops.get(c.getFrom());
+                        int index = c.getFrom();
+                        double newOffset = now.getOffset();
+                        double floorOffset = index == 0 ? -1 : stops.get(index - 1).getOffset();
+                        double ceilOffset = ++index == stops.size() ? 2 : stops.get(index).getOffset();
+                        //Check if the new Stop fits in the same spot
+                        if (newOffset < floorOffset || newOffset > ceilOffset) {
+                            //mark for sorting
+                        }
+                    } else if (c.wasAdded()) {
+                        
+                    } /*else if (c.wasRemoved()) {
+                        //do nothing
+                    }*/
+                }
+            }
         });
-        listView.setOnEditCommit((ListView.EditEvent<Stop> b) -> {
-        System.out.println(b.getIndex() + " " + stops.get(b.getIndex()) + "->" + b.getNewValue());
-        if (b.getNewValue() == null) {
-        stops.remove(b.getIndex());
-        } else {
-        stops.set(b.getIndex(), b.getNewValue());
-        }
-        });*/
+//<editor-fold defaultstate="collapsed" desc="list view code removed">
+/* listView = new ListView<>();
+listView.setItems(stops);
+listView.setEditable(true);
+listView.setPrefHeight(120);
+listView.setMinHeight(100);
+listView.setCellFactory((lv) -> {
+return new StopCell();
+});
+listView.setOnEditCommit((ListView.EditEvent<Stop> b) -> {
+System.out.println(b.getIndex() + " " + stops.get(b.getIndex()) + "->" + b.getNewValue());
+if (b.getNewValue() == null) {
+stops.remove(b.getIndex());
+} else {
+stops.set(b.getIndex(), b.getNewValue());
+}
+});*/
  /*   stopList.addEventHandler(KeyEvent.KEY_PRESSED, (e) -> {
-        System.out.println("ev : " + e.getEventType());
-        if (e.getCode() == KeyCode.DELETE) {
-        Stop stop = stopList.getSelectionModel().getSelectedItem();
-        if (stop != null) {
-        int index = stopList.getSelectionModel().getSelectedIndex();
-        int i = sortedStops.getSourceIndex(index);
-        StackPane key = observableStacks.get(i);
-        deleteStop(key);
-        }
-        }
-        });*/
+System.out.println("ev : " + e.getEventType());
+if (e.getCode() == KeyCode.DELETE) {
+Stop stop = stopList.getSelectionModel().getSelectedItem();
+if (stop != null) {
+int index = stopList.getSelectionModel().getSelectedIndex();
+int i = sortedStops.getSourceIndex(index);
+StackPane key = observableStacks.get(i);
+deleteStop(key);
+}
+}
+});*/
+//</editor-fold>
         cycleMethod.addListener((o) -> {
             updateGradient();
         });
