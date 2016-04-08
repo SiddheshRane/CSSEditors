@@ -179,13 +179,18 @@ public class RadialGradientEditor extends GradientEditor {
                 pane.relocate(event.getX() - pane.getWidth() / 2, event.getY() - pane.getHeight() / 2);
             } else if (selectedStop != null) {
                 //move the selected gradient ring around by modifying its focus and focusAngle
-                //FIXME: this doesn not work properly for rings greater than offset 1.0 
                 double x = (stopcx + (event.getX() - pressX)) / getWidth() - getCenterX();
                 double y = (stopcy + (event.getY() - pressY)) / getHeight() - getCenterY();
                 double d = Math.sqrt(x * x + y * y) / getRadius();
                 double t = 1 - ellipseOffset;
                 double f = d / t;
-                f = f > 1 ? 1 : f < -1 ? -1 : f;
+                if (f < 0) {
+                    //Make focus positive and compensate by shifting the focusAngle by 180deg
+                    f = Math.abs(f);
+                    y = -y;
+                    x = -x;
+                }
+                f = f > 1 ? 1 : f;
                 setFocusAngle(Math.toDegrees(Math.atan2(y, x)));
                 setFocus(f);
                 f = Math.abs(f);
