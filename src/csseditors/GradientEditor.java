@@ -39,15 +39,16 @@ import javafx.scene.paint.Stop;
  * @author Siddhesh
  */
 public abstract class GradientEditor extends Pane {
-     static final CornerRadii ROUND = new CornerRadii(50, true);
+
+    static final CornerRadii ROUND = new CornerRadii(50, true);
     private static final Comparator<Stop> STOP_COMPARATOR = Comparator.comparingDouble(Stop::getOffset);
 
     //maps Stops to their visual nodes
     protected HashMap<StackPane, Stop> stopMap;
     private ObservableList<Stop> stops;
-    protected final ObjectProperty<CycleMethod> cycleMethod = new SimpleObjectProperty<>(CycleMethod.NO_CYCLE);
-    protected final BooleanProperty proportional = new SimpleBooleanProperty(true);
-
+    private  final ObjectProperty<CycleMethod> cycleMethod = new SimpleObjectProperty<>(CycleMethod.NO_CYCLE);
+    private  final BooleanProperty proportional = new SimpleBooleanProperty(true);
+//PENDING: Implement a stop selection mechanism
     SelectionModel<Stop> stopSelection;
     //Mouse Event Filtering to remove onClick event after mouse gets dragged
     boolean dragged;
@@ -67,13 +68,14 @@ public abstract class GradientEditor extends Pane {
             }
         }
     };
+
     public GradientEditor() {
         stopMap = new HashMap<>(7);
         stops = FXCollections.observableArrayList();
-        stops.addListener(new ListChangeListener<Stop>() {
+        stopsListener = new ListChangeListener<Stop>() {
             @Override
             public void onChanged(ListChangeListener.Change<? extends Stop> c) {
-                boolean sort =false;
+                boolean sort = false;
                 while (c.next()) {
                     if (c.wasReplaced()) {
                         //check whether the replaced Stop needs sorting
@@ -88,24 +90,27 @@ public abstract class GradientEditor extends Pane {
                             //mark for sorting
                             sort = true;
                         }
+
                     } else if (c.wasAdded()) {
                         sort = true;
                     }
                     /*else if (c.wasRemoved()) {
-                        //do nothing
+                    //do nothing
                     }*/
                 }
                 if (sort) {
                     stops.sort(STOP_COMPARATOR);
                 }
+                updateGradient();
             }
-        });
-         this.stopSelection = new SingleSelectionModel<Stop>() {
+        };
+        stops.addListener(stopsListener);
+        this.stopSelection = new SingleSelectionModel<Stop>() {
             @Override
             protected Stop getModelItem(int index) {
                 return stops.get(index);
             }
-            
+
             @Override
             protected int getItemCount() {
                 return stops.size();
@@ -144,8 +149,8 @@ deleteStop(key);
         addEventFilter(MouseEvent.MOUSE_PRESSED, clickFilter);
         addEventFilter(MouseEvent.MOUSE_DRAGGED, clickFilter);
         addEventFilter(MouseEvent.MOUSE_CLICKED, clickFilter);
-
     }
+    private final ListChangeListener<Stop> stopsListener;
 
 //<editor-fold defaultstate="collapsed" desc="property getter/setter">
     public CycleMethod getCycleMethod() {
@@ -228,12 +233,11 @@ deleteStop(key);
         stopMap.forEach((StackPane t, Stop u) -> {
             layoutStop(t, u);
         });
-
     }
 
-    public  abstract double stopLayoutX(double t);
+    public abstract double stopLayoutX(double t);
 
-    public  abstract double stopLayoutY(double t);
+    public abstract double stopLayoutY(double t);
 
     @Override
     protected void layoutChildren() {
@@ -251,7 +255,7 @@ deleteStop(key);
      * @return the offset at the projection of ( mx , my ) onto the gradient
      * stops line.
      */
-    public  abstract double getOffset(double mx, double my);
+    public abstract double getOffset(double mx, double my);
 
     @Deprecated
     public abstract void updateGradient();

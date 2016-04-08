@@ -121,7 +121,7 @@ public class RadialGradientEditor extends GradientEditor {
             for (Stop observableStop : stopMap.values()) {
                 double delta = normalOffset - observableStop.getOffset();
                 if (Math.abs(delta) < 0.05) {
-                    if (cycleMethod.get() == CycleMethod.REFLECT && (int) (offset) % 2 == 1) {
+                    if (getCycleMethod() == CycleMethod.REFLECT && (int) (offset) % 2 == 1) {
                         delta = -delta;
                     }
                     offset -= delta;
@@ -285,8 +285,8 @@ public class RadialGradientEditor extends GradientEditor {
         centerX.addListener(redraw);
         centerY.addListener(redraw);
         focusAngle.addListener(redraw);
-        cycleMethod.addListener(redraw);
-        proportional.addListener(redraw);
+        cycleMethodProperty().addListener(redraw);
+        proportionalProperty().addListener(redraw);
         setOnMouseClicked(mouseHandler);
         setOnMouseMoved(mouseHandler);
         setOnMouseDragged(mouseHandler);
@@ -493,7 +493,7 @@ public class RadialGradientEditor extends GradientEditor {
 
     private double getNormalisedOffset(double D) {
         if (D > 1) {
-            switch (cycleMethod.get()) {
+            switch (getCycleMethod()) {
                 case NO_CYCLE:
                     return 1;
                 case REPEAT:
@@ -523,8 +523,8 @@ public class RadialGradientEditor extends GradientEditor {
     public void updateGradient() {
         RadialGradient rg = new RadialGradient(
                 getFocusAngle(), getFocus(), getCenterX(), getCenterY(), getRadius(),
-                proportional.get(),
-                cycleMethod.get(),
+                isProportional(),
+                getCycleMethod(),
                 getStops()
         );
         gradient.set(rg);

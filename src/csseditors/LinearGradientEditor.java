@@ -134,7 +134,7 @@ public class LinearGradientEditor extends GradientEditor {
         line = new Line();
         cycleMethodBox = new ComboBox<>(FXCollections.observableArrayList(CycleMethod.values()));
         
-        cycleMethodBox.valueProperty().bindBidirectional(cycleMethod);
+        cycleMethodBox.valueProperty().bindBidirectional(cycleMethodProperty());
         cycleMethodBox.setVisibleRowCount(3);
         cycleMethodBox.getStyleClass().add("cycle-method");
         
@@ -311,7 +311,7 @@ public class LinearGradientEditor extends GradientEditor {
 
     @Override
     public void updateGradient() {
-        LinearGradient lg = new LinearGradient(getStartX(), getStartY(), getEndX(), getEndY(), proportional.get(), cycleMethod.get(), getStops());
+        LinearGradient lg = new LinearGradient(getStartX(), getStartY(), getEndX(), getEndY(),isProportional() , getCycleMethod(), getStops());
         gradient.set(lg);
         setBackground(new Background(new BackgroundFill(lg, CornerRadii.EMPTY, getPadding())));
 
@@ -372,10 +372,10 @@ public class LinearGradientEditor extends GradientEditor {
                 return;
             }
             cycleMethodField.setItems(FXCollections.observableArrayList(CycleMethod.values()));
-            cycleMethodField.valueProperty().bindBidirectional(cycleMethod);
+            cycleMethodField.valueProperty().bindBidirectional(cycleMethodProperty());
             cycleMethodField.getSelectionModel().selectFirst();
 
-            proportionalField.selectedProperty().bindBidirectional(proportional);
+            proportionalField.selectedProperty().bindBidirectional(proportionalProperty());
 
             Tab stopTab = new Tab("Stops");
             //stopTab.setContent(listView);
