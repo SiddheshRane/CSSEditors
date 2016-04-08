@@ -9,14 +9,12 @@ and open the template in the editor.
 */
 * {
     -fx-border-variable-color : black;
-
 }
 .end {
     -fx-pref-width : 10;
     -fx-pref-height:10;
-    -fx-border-color : -fx-border-variable-color;
-    -fx-border-radius: 10;
-    -fx-background-color:whitesmoke;
+    -fx-border-color : tomato;
+    -fx-border-radius: 0;
     -fx-background-radius : 10;
     visibility: hidden;
 }
@@ -24,10 +22,9 @@ and open the template in the editor.
 .start {
     -fx-pref-width : 10;
     -fx-pref-height:10;
-    -fx-border-color : -fx-border-variable-color;
+    -fx-border-color : springgreen;
     -fx-border-radius: 10;
-    -fx-background-color:whitesmoke;
-    -fx-background-radius : 10;
+    -fx-background-radius : 0;
     visibility: hidden;
 
 }
@@ -37,7 +34,13 @@ and open the template in the editor.
     -fx-pref-width:10;
     -fx-pref-height:10;
 }
-
+.stop:hover{
+    -fx-pref-width:12;
+    -fx-pref-height:12;
+}
+.stop:pressed {
+    
+}
 .stop:disabled {
     -fx-border-color : grey;
 
@@ -51,6 +54,7 @@ and open the template in the editor.
 
 }
 .unit-box{
+    /*depracated*/
     -fx-padding : 5;
     -fx-border-color: coral;
     -fx-border-insets: 0  ;
@@ -83,9 +87,7 @@ and open the template in the editor.
 .focus {
     -fx-pref-width : 10;
     -fx-pref-height:10;
-    -fx-border-color : black;
-    -fx-border-radius: 10;
-    -fx-background-color:whitesmoke;
+    -fx-background-color:mediumspringgreen;
     -fx-background-radius : 10;
 }
 .radius {
@@ -93,16 +95,15 @@ and open the template in the editor.
     -fx-pref-height:10;
     -fx-border-color : black;
     -fx-border-radius: 10;
-    -fx-background-color:whitesmoke;
+    -fx-background-color:tomato;
     -fx-background-radius : 10;
 }
 .add {
     -fx-pref-width : 10;
     -fx-pref-height:10;
-    -fx-border-color : red;
-    -fx-border-radius: 10;
-    -fx-background-color:white;
-    -fx-background-radius : 10;
+    -fx-border-color :#ee39e2;
+    -fx-border-radius: 0;
+    -fx-shape:"M0,0 h5 v5 h2 v-5 h5 v-2 h-5 v-5 h-2 v5 h-5 z"
 }
 
 .cross-mark{
