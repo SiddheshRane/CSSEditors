@@ -48,6 +48,8 @@ public class RadialGradientEditor extends GradientEditor {
     StackPane add;
 
     StackPane selectedStop;
+    //the stop currently being hovered
+    StackPane hoverPane;
     double ellipseOffset;
     double mouseX, mouseY;
     boolean showingEndPoints;
@@ -97,19 +99,18 @@ public class RadialGradientEditor extends GradientEditor {
     };*/
 //</editor-fold>
     EventHandler<MouseEvent> mouseHandler = new EventHandler<MouseEvent>() {
-        //the stop currently being hovered
-        StackPane hoverPane;
+
         double cx, cy, stopcx, stopcy;
         double pressX, pressY;
 
-        public void moved(MouseEvent event) {
+        void moved(MouseEvent event) {
             if (selectedStop != null || event.getTarget() == hoverPane) {
                 //dont do anything as a stop is pre selected
                 return;
             } else if (hoverPane != null) {
                 //mouse is not on hover pane so hide it
-                hoverPane.setVisible(false);
-                hoverPane.setMouseTransparent(true);
+//                hoverPane.setVisible(false);
+//                hoverPane.setMouseTransparent(true);
                 hoverPane = null;
             }
             //set the ellipse to show the gradient ring corresponding to the mouseHandler point
@@ -145,12 +146,7 @@ public class RadialGradientEditor extends GradientEditor {
                     break;
                 }
             }
-            double focus = Math.abs(getFocus());
             requestLayout();
-            add.relocate(
-                    stopLayoutX(focus * offset / (1 + focus)) - add.getWidth() / 2,
-                    stopLayoutY(focus * offset / (1 + focus)) - add.getHeight() / 2
-            );
         }
 
         void dragged(MouseEvent event) {
@@ -183,6 +179,7 @@ public class RadialGradientEditor extends GradientEditor {
                 pane.relocate(event.getX() - pane.getWidth() / 2, event.getY() - pane.getHeight() / 2);
             } else if (selectedStop != null) {
                 //move the selected gradient ring around by modifying its focus and focusAngle
+                //FIXME: this doesn not work properly for rings greater than offset 1.0 
                 double x = (stopcx + (event.getX() - pressX)) / getWidth() - getCenterX();
                 double y = (stopcy + (event.getY() - pressY)) / getHeight() - getCenterY();
                 double d = Math.sqrt(x * x + y * y) / getRadius();
@@ -192,14 +189,11 @@ public class RadialGradientEditor extends GradientEditor {
                 setFocusAngle(Math.toDegrees(Math.atan2(y, x)));
                 setFocus(f);
                 f = Math.abs(f);
-//                ellipse.setCenterX(stopLayoutX(f * ellipseOffset / (1 + f)));
-//                ellipse.setCenterY(stopLayoutY(f * ellipseOffset / (1 + f)));
-//                ellipse.setRadiusX(getRadius() * ellipseOffset * getWidth());
-//                ellipse.setRadiusY(getRadius() * ellipseOffset * getHeight());
-                add.relocate(
-                        stopLayoutX(f * ellipseOffset / (1 + f)) - add.getWidth() / 2,
-                        stopLayoutY(f * ellipseOffset / (1 + f)) - add.getHeight() / 2
-                );
+                ellipse.setCenterX(stopLayoutX(f * ellipseOffset / (1 + f)));
+                ellipse.setCenterY(stopLayoutY(f * ellipseOffset / (1 + f)));
+                ellipse.setRadiusX(getRadius() * ellipseOffset * getWidth());
+                ellipse.setRadiusY(getRadius() * ellipseOffset * getHeight());
+
 //                selectedStop.setVisible(false);
             } else { //drag center
                 double ncx = cx + (event.getX() - pressX) / getWidth();
@@ -209,7 +203,7 @@ public class RadialGradientEditor extends GradientEditor {
             }
         }
 
-        public void click(MouseEvent event) {
+        void click(MouseEvent event) {
             //check for right click(context menu)
             if (event.getButton() == MouseButton.SECONDARY) {
                 selectedStop = null;
@@ -430,12 +424,22 @@ public class RadialGradientEditor extends GradientEditor {
         line.setStartY(stopLayoutY(0));
         line.setEndX(stopLayoutX(1));
         line.setEndY(stopLayoutY(1));
-//        layoutStops();
-        double focus = getFocus();
-        ellipse.setCenterX(stopLayoutX(focus * ellipseOffset / (1 + focus)));
-        ellipse.setCenterY(stopLayoutY(focus * ellipseOffset / (1 + focus)));
+        double f = Math.abs(getFocus());
+        ellipse.setCenterX(stopLayoutX(f * ellipseOffset / (1 + f)));
+        ellipse.setCenterY(stopLayoutY(f * ellipseOffset / (1 + f)));
         ellipse.setRadiusX(getRadius() * ellipseOffset * getWidth());
         ellipse.setRadiusY(getRadius() * ellipseOffset * getHeight());
+        add.relocate(
+                stopLayoutX(f * ellipseOffset / (1 + f)) - add.getWidth() / 2,
+                stopLayoutY(f * ellipseOffset / (1 + f)) - add.getHeight() / 2
+        );
+        for (Map.Entry<StackPane, Stop> entry : stopMap.entrySet()) {
+            StackPane pane = entry.getKey();
+            Stop stop = entry.getValue();
+            if (pane != hoverPane) {
+                layoutStop(pane, stop);
+            }
+        }
     }
 
     //<editor-fold defaultstate="collapsed" desc="getOffset">
@@ -543,14 +547,14 @@ public class RadialGradientEditor extends GradientEditor {
     public void selectStop(StackPane p) {
         if (selectedStop == p) {
             //deselect the stop
-            selectedStop.setVisible(false);
-            selectedStop.setMouseTransparent(true);
+//            selectedStop.setVisible(false);
+//            selectedStop.setMouseTransparent(true);
             selectedStop = null;
             ellipseOffset = -1;
         } else {
             if (selectedStop != null) {
-                selectedStop.setVisible(false);
-                selectedStop.setMouseTransparent(true);
+//                selectedStop.setVisible(false);
+//                selectedStop.setMouseTransparent(true);
             }
             selectedStop = p;
             if (p == null) {

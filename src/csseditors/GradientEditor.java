@@ -17,6 +17,8 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.geometry.Insets;
+import javafx.scene.control.SelectionModel;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -37,23 +39,41 @@ import javafx.scene.paint.Stop;
  * @author Siddhesh
  */
 public abstract class GradientEditor extends Pane {
+     static final CornerRadii ROUND = new CornerRadii(50, true);
+    private static final Comparator<Stop> STOP_COMPARATOR = Comparator.comparingDouble(Stop::getOffset);
 
     //maps Stops to their visual nodes
     protected HashMap<StackPane, Stop> stopMap;
     private ObservableList<Stop> stops;
-
-    private static final CornerRadii ROUND = new CornerRadii(50, true);
-
     protected final ObjectProperty<CycleMethod> cycleMethod = new SimpleObjectProperty<>(CycleMethod.NO_CYCLE);
     protected final BooleanProperty proportional = new SimpleBooleanProperty(true);
 
+    SelectionModel<Stop> stopSelection;
+    //Mouse Event Filtering to remove onClick event after mouse gets dragged
+    boolean dragged;
+    EventHandler<MouseEvent> clickFilter = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            EventType<? extends MouseEvent> eventType = event.getEventType();
+            if (eventType.equals(MouseEvent.MOUSE_PRESSED)) {
+                dragged = false;
+            } else if (eventType.equals(MouseEvent.MOUSE_DRAGGED)) {
+                dragged = true;
+            }
+            if (eventType.equals(MouseEvent.MOUSE_CLICKED)) {
+                if (dragged) {
+                    event.consume();
+                }
+            }
+        }
+    };
     public GradientEditor() {
         stopMap = new HashMap<>(7);
         stops = FXCollections.observableArrayList();
         stops.addListener(new ListChangeListener<Stop>() {
             @Override
             public void onChanged(ListChangeListener.Change<? extends Stop> c) {
-                
+                boolean sort =false;
                 while (c.next()) {
                     if (c.wasReplaced()) {
                         //check whether the replaced Stop needs sorting
@@ -66,15 +86,31 @@ public abstract class GradientEditor extends Pane {
                         //Check if the new Stop fits in the same spot
                         if (newOffset < floorOffset || newOffset > ceilOffset) {
                             //mark for sorting
+                            sort = true;
                         }
                     } else if (c.wasAdded()) {
-                        
-                    } /*else if (c.wasRemoved()) {
+                        sort = true;
+                    }
+                    /*else if (c.wasRemoved()) {
                         //do nothing
                     }*/
                 }
+                if (sort) {
+                    stops.sort(STOP_COMPARATOR);
+                }
             }
         });
+         this.stopSelection = new SingleSelectionModel<Stop>() {
+            @Override
+            protected Stop getModelItem(int index) {
+                return stops.get(index);
+            }
+            
+            @Override
+            protected int getItemCount() {
+                return stops.size();
+            }
+        };
 //<editor-fold defaultstate="collapsed" desc="list view code removed">
 /* listView = new ListView<>();
 listView.setItems(stops);
@@ -105,10 +141,6 @@ deleteStop(key);
 }
 });*/
 //</editor-fold>
-        cycleMethod.addListener((o) -> {
-            updateGradient();
-        });
-
         addEventFilter(MouseEvent.MOUSE_PRESSED, clickFilter);
         addEventFilter(MouseEvent.MOUSE_DRAGGED, clickFilter);
         addEventFilter(MouseEvent.MOUSE_CLICKED, clickFilter);
@@ -124,7 +156,7 @@ deleteStop(key);
         cycleMethod.set(value);
     }
 
-    public ObjectProperty cycleMethodProperty() {
+    public ObjectProperty<CycleMethod> cycleMethodProperty() {
         return cycleMethod;
     }
 
@@ -139,8 +171,7 @@ deleteStop(key);
     public BooleanProperty proportionalProperty() {
         return proportional;
     }
-//</editor-fold>
-    private static final Comparator<Stop> STOP_COMPARATOR = Comparator.comparingDouble(Stop::getOffset);
+    //</editor-fold>
 
     protected StackPane addStop(Stop s) {
         StackPane stopMark = new StackPane();
@@ -151,7 +182,7 @@ deleteStop(key);
         stops.add(s);
         stops.sort(STOP_COMPARATOR);
         getChildren().add(stopMark);
-
+        updateGradient();
         return stopMark;
     }
 
@@ -171,6 +202,7 @@ deleteStop(key);
 
         p.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
         layoutStop(p, s);
+        updateGradient();
     }
 
     public void deleteStop(StackPane p) {
@@ -178,6 +210,7 @@ deleteStop(key);
         stops.remove(removed);
         //do not sort. List is already sorted
         getChildren().remove(p);
+        updateGradient();
     }
 
     public final ObservableList<Stop> getStops() {
@@ -198,14 +231,14 @@ deleteStop(key);
 
     }
 
-    protected abstract double stopLayoutX(double t);
+    public  abstract double stopLayoutX(double t);
 
-    protected abstract double stopLayoutY(double t);
+    public  abstract double stopLayoutY(double t);
 
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        layoutStops();
+//        layoutStops();
     }
 
     /**
@@ -218,27 +251,9 @@ deleteStop(key);
      * @return the offset at the projection of ( mx , my ) onto the gradient
      * stops line.
      */
-    protected abstract double getOffset(double mx, double my);
+    public  abstract double getOffset(double mx, double my);
 
     @Deprecated
     public abstract void updateGradient();
 
-    //Mouse Event Filtering to remove onClick event after mouse gets dragged
-    boolean dragged;
-    EventHandler<MouseEvent> clickFilter = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent event) {
-            EventType<? extends MouseEvent> eventType = event.getEventType();
-            if (eventType.equals(MouseEvent.MOUSE_PRESSED)) {
-                dragged = false;
-            } else if (eventType.equals(MouseEvent.MOUSE_DRAGGED)) {
-                dragged = true;
-            }
-            if (eventType.equals(MouseEvent.MOUSE_CLICKED)) {
-                if (dragged) {
-                    event.consume();
-                }
-            }
-        }
-    };
 }

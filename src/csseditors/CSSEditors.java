@@ -14,19 +14,27 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.Stop;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 /**
@@ -48,6 +56,7 @@ public class CSSEditors extends Application {
 //        LinearGradientEditorTest(primaryStage);
         RadialGradientEditorTest(primaryStage);
 //        backgroundLayerTest(primaryStage);
+//compositeAppTest(primaryStage);
     }
 
     public void backgroundFillEditorTest(Stage s) {
@@ -147,7 +156,13 @@ public class CSSEditors extends Application {
         AnchorPane.setTopAnchor(radialGradientEditor, 25d);
         AnchorPane.setBottomAnchor(radialGradientEditor, 25d);
 
-        Scene scene = new Scene(pane);
+        ComboBox<CycleMethod> cycleMethodBox = new ComboBox<>(FXCollections.observableArrayList(CycleMethod.values()));
+        cycleMethodBox.valueProperty().bindBidirectional(radialGradientEditor.cycleMethodProperty());
+        
+        VBox vbox = new VBox(pane, cycleMethodBox);
+        VBox.setVgrow(pane, Priority.ALWAYS);
+        
+        Scene scene = new Scene(vbox);
         s.setScene(scene);
         s.setTitle("RGE Test");
         s.show();
@@ -207,6 +222,28 @@ public class CSSEditors extends Application {
         s.show();
     }
 
+    public void compositeAppTest(Stage s){
+        Rectangle rec = new Rectangle(200, 100);
+        RadialGradientEditor editor = new RadialGradientEditor();
+        editor.setOpacity(0.5);
+        StackPane overlay = new StackPane(rec,editor);
+        rec.setArcWidth(30);
+        rec.setArcHeight(30);
+        rec.widthProperty().bind(overlay.widthProperty());
+        rec.heightProperty().bind(overlay.heightProperty());
+        rec.fillProperty().bind(editor.gradientProperty());
+        
+        Circle circle = new Circle(50);
+        circle.fillProperty().bind(editor.gradientProperty());
+        TextArea css = new TextArea("CSS");
+        css.textProperty().bind(editor.gradientProperty().asString());
+        HBox hbox = new HBox(overlay, circle,css);
+        Scene scene = new Scene(hbox);
+        s.setScene(scene);
+        s.setTitle("Composite Application Test");
+        s.show();
+    }
+    
     /**
      * @param args the command line arguments
      */

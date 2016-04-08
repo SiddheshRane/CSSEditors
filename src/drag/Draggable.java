@@ -15,6 +15,7 @@ import javafx.scene.input.MouseEvent;
  *
  * @author Siddhesh
  */
+//FIXME: get rid of this class. It is not necessary
 public abstract class Draggable {
 
     protected static double anchorX, anchorY, dragX, dragY;
