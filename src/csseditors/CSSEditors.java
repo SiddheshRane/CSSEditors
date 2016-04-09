@@ -158,10 +158,20 @@ public class CSSEditors extends Application {
 
         ComboBox<CycleMethod> cycleMethodBox = new ComboBox<>(FXCollections.observableArrayList(CycleMethod.values()));
         cycleMethodBox.valueProperty().bindBidirectional(radialGradientEditor.cycleMethodProperty());
-        
-        VBox vbox = new VBox(pane, cycleMethodBox);
+    
+        Label focus = new Label();
+        focus.textProperty().bind(radialGradientEditor.focusProperty().asString("Focus: %2.2f"));
+        Label focusAngle = new Label();
+        focusAngle.textProperty().bind(radialGradientEditor.focusAngleProperty().asString("Focus Angle: %2.2f"));
+        Label radius = new Label();
+        radius.textProperty().bind(radialGradientEditor.radiusProperty().asString("Radius: %2.2f"));
+        StopList listView = new StopList();
+        listView.setItems(radialGradientEditor.getStops());
+        listView.setPrefHeight(100);
+
+        VBox vbox = new VBox(pane, cycleMethodBox,focus,focusAngle,radius,listView);
         VBox.setVgrow(pane, Priority.ALWAYS);
-        
+
         Scene scene = new Scene(vbox);
         s.setScene(scene);
         s.setTitle("RGE Test");

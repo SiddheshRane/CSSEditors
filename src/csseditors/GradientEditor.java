@@ -7,6 +7,8 @@ package csseditors;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -90,7 +92,10 @@ public abstract class GradientEditor extends Pane {
                             //mark for sorting
                             sort = true;
                         }
-
+                        stopMap.entrySet().stream().filter(e->e.getValue() == old).findAny().ifPresent((t) -> {
+                            t.setValue(now);
+                        });
+                        
                     } else if (c.wasAdded()) {
                         sort = true;
                     }

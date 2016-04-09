@@ -296,8 +296,8 @@ public class RadialGradientEditor extends GradientEditor {
         getChildren().addAll(line, ellipse, add, rCenter, rFocus, rRadius);
 
         addStop(new Stop(0, Color.ALICEBLUE));
-        addStop(new Stop(0.5, Color.LIGHTGREEN));
-        addStop(new Stop(1, Color.BLACK));
+        addStop(new Stop(0.5, Color.SALMON));
+        addStop(new Stop(1, Color.DARKRED));
 
         showEndPoints(false);
 //        rCenter.layoutXProperty().bind(centerX.multiply(widthProperty()));
