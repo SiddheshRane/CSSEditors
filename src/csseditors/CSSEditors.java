@@ -29,10 +29,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -189,8 +191,8 @@ public class CSSEditors extends Application {
         ListView<Stop> stopsList = new ListView<>();
         stopsList.setEditable(true);
         ObservableList<Stop> stops = FXCollections.observableArrayList(new Stop(0, Color.AQUA),
-                                                                       new Stop(0.5, Color.ALICEBLUE), new Stop(0.6, Color.CHARTREUSE),
-                                                                       new Stop(0.7, Color.BLANCHEDALMOND));
+                new Stop(0.5, Color.ALICEBLUE), new Stop(0.6, Color.CHARTREUSE),
+                new Stop(0.7, Color.BLANCHEDALMOND));
 
         stopsList.setItems(stops);
         stopsList.setCellFactory((ListView<Stop> param) -> new StopCell());
@@ -274,17 +276,20 @@ public class CSSEditors extends Application {
     public void backgroundLayerTest2(Stage s) {
         Region test = new Region();
         test.setStyle(
-                "-fx-background-color: cornflowerblue,#eb703e,linear-gradient(to bottom,steelblue,springgreen);"
+                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(radius 50%, red, blue);"
                 + "-fx-background-insets: 0,2,4;"
                 + "-fx-background-radius: 30%;"
         );
         test.setPrefSize(50, 50);
         test.setMouseTransparent(true);
         test.setFocusTraversable(false);
-        //add the region to group to turn its transform into layout
-        StackPane stack = new StackPane(new Group(test));
         test.setScaleX(1);
         test.setScaleY(1);
+        //add the region to group to turn its transform into layout
+        StackPane stack = new StackPane(new Group(test));
+        stack.setStyle("-fx-border-color: springgreen");
+        stack.maxWidthProperty().bind(test.widthProperty().multiply(test.scaleXProperty()));
+        stack.maxHeightProperty().bind(test.heightProperty().multiply(test.scaleYProperty()));
         stack.setOnScroll(se -> {
             if (se.isControlDown()) {
                 se.consume();
@@ -294,9 +299,12 @@ public class CSSEditors extends Application {
             }
         });
         //add everything to a ScrollPane
-        FlowPane flow = new FlowPane(10, 5,stack);
+        TilePane flow = new TilePane(stack);
         flow.setStyle("-fx-border-color:blue;");
-        
+        flow.prefTileHeightProperty().bind(stack.maxHeightProperty());
+        flow.prefTileWidthProperty().bind(stack.maxWidthProperty());
+        flow.setHgap(5);
+        flow.setVgap(5);
         ScrollPane scrollPane = new ScrollPane(flow);
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
@@ -309,29 +317,29 @@ public class CSSEditors extends Application {
         List<BackgroundFill> fills = test.getBackground().getFills();
         List<BackgroundLayer> bglayers = new ArrayList<>(fills.size());
         ChangeListener cl = (ob, ol, nw) -> {
-            System.out.println("At least called!");
-            List<BackgroundFill> newBgFills = bglayers.stream().map(BackgroundLayer::getBackgroundFill).peek(fill -> System.out.println("STREAM" + fill)).collect(Collectors.toList());
+            List<BackgroundFill> newBgFills = bglayers.stream().map(BackgroundLayer::getBackgroundFill).collect(Collectors.toList());
             test.setBackground(new Background(newBgFills, null));
         };
         for (BackgroundFill fill : fills) {
             //create a BackgroundLayer for each BackgroundFill
             BackgroundLayer bglayer = new BackgroundLayer(fill);
             bglayer.backgroundFillProperty().addListener(cl);
-            bglayer.prefWidthProperty().bind(stack.widthProperty());
-            bglayer.prefWidthProperty().bind(stack.heightProperty());
             bglayers.add(bglayer);
             flow.getChildren().add(bglayer);
             if (fill.getFill() instanceof LinearGradient) {
                 LinearGradientEditor editor = new LinearGradientEditor();
                 editor.setGradient((LinearGradient) fill.getFill());
-                editor.prefWidthProperty().bind(test.widthProperty());
-                editor.prefHeightProperty().bind(test.heightProperty());
                 bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
                 bglayer.getChildren().add(editor);
             } else if (fill.getFill() instanceof Color) {
                 ColorPicker picker = new ColorPicker();
                 picker.valueProperty().addListener((observable, oldValue, newValue) -> bglayer.setBackgroundPaint(newValue));
                 bglayer.getChildren().add(picker);
+            } else if (fill.getFill() instanceof RadialGradient) {
+                RadialGradient rad = (RadialGradient) fill.getFill();
+                RadialGradientEditor editor = new RadialGradientEditor();
+                bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
+                bglayer.getChildren().add(editor);
             }
 
         }
