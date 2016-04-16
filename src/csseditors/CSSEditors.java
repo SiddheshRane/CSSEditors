@@ -60,6 +60,7 @@ public class CSSEditors extends Application {
 //        RadialGradientEditorTest(primaryStage);
 //        backgroundLayerTest(primaryStage);
         backgroundLayerTest2(primaryStage);
+//        backgroundLayerTest3(primaryStage);
 //        compositeAppTest(primaryStage);
     }
 
@@ -342,6 +343,84 @@ public class CSSEditors extends Application {
                 bglayer.getChildren().add(editor);
             }
 
+        }
+
+        scene.getStylesheets().add("/csseditors/csseditors.css");
+        s.setScene(scene);
+        scrollPane.autosize();
+        s.setTitle("BackgroundLayer Test");
+        s.show();
+
+    }
+
+    public void backgroundLayerTest3(Stage s) {
+        Button test = new Button();
+//        test.setStyle(
+//                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(radius 50%, red, blue);"
+//                + "-fx-background-insets: 0,2,4;"
+//                + "-fx-background-radius: 30%;"
+//        );
+//        test.setPrefSize(50, 50);
+        test.setMouseTransparent(true);
+        test.setFocusTraversable(false);
+        test.setScaleX(1);
+        test.setScaleY(1);
+        //add the region to group to turn its transform into layout
+        StackPane stack = new StackPane(new Group(test));
+        stack.setStyle("-fx-border-color: springgreen");
+        stack.maxWidthProperty().bind(test.widthProperty().multiply(test.scaleXProperty()));
+        stack.maxHeightProperty().bind(test.heightProperty().multiply(test.scaleYProperty()));
+        stack.setOnScroll(se -> {
+            if (se.isControlDown()) {
+                se.consume();
+                test.setScaleX(test.getScaleX() + se.getDeltaY() / 100);
+                test.setScaleY(test.getScaleY() + se.getDeltaY() / 100);
+            }
+        });
+        //add everything to a ScrollPane
+        TilePane flow = new TilePane(stack);
+        flow.setStyle("-fx-border-color:blue;");
+        flow.prefTileHeightProperty().bind(stack.maxHeightProperty());
+        flow.prefTileWidthProperty().bind(stack.maxWidthProperty());
+        flow.setHgap(5);
+        flow.setVgap(5);
+        ScrollPane scrollPane = new ScrollPane(flow);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+        Scene scene = new Scene(scrollPane);
+        //apply css to the button
+        scrollPane.layout();
+        scrollPane.applyCss();
+        scrollPane.setPrefSize(400, 400);
+        //get all bgfills of the button
+        List<BackgroundFill> fills = test.getBackground().getFills();
+        List<BackgroundLayer> bglayers = new ArrayList<>(fills.size());
+        ChangeListener cl = (ob, ol, nw) -> {
+            List<BackgroundFill> newBgFills = bglayers.stream().map(BackgroundLayer::getBackgroundFill).collect(Collectors.toList());
+            test.setBackground(new Background(newBgFills, null));
+        };
+        for (BackgroundFill fill : fills) {
+            //create a BackgroundLayer for each BackgroundFill
+            BackgroundLayer bglayer = new BackgroundLayer(fill);
+            bglayer.backgroundFillProperty().addListener(cl);
+            bglayers.add(bglayer);
+            flow.getChildren().add(bglayer);
+            if (fill.getFill() instanceof LinearGradient) {
+                LinearGradientEditor editor = new LinearGradientEditor();
+                editor.setGradient((LinearGradient) fill.getFill());
+                bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
+                bglayer.getChildren().add(editor);
+            } else if (fill.getFill() instanceof Color) {
+                ColorPicker picker = new ColorPicker();
+                picker.valueProperty().addListener((observable, oldValue, newValue) -> bglayer.setBackgroundPaint(newValue));
+                bglayer.getChildren().add(picker);
+            } else if (fill.getFill() instanceof RadialGradient) {
+                RadialGradient rad = (RadialGradient) fill.getFill();
+                RadialGradientEditor editor = new RadialGradientEditor();
+                editor.setGradient(rad);
+                bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
+                bglayer.getChildren().add(editor);
+            }
         }
 
         scene.getStylesheets().add("/csseditors/csseditors.css");

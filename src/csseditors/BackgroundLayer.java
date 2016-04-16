@@ -85,25 +85,9 @@ public class BackgroundLayer extends StackPane {
             }
             updateBackgroundFill();
         };
-        ChangeListener fillListener = (o, old, nw) -> {
-            if (o == backgroundPaint) {
-                System.out.println("Paint ");
-            } else if (o == backgroundInset) {
-                System.out.println("Inset ");
-            } else if (o == backgroundRadii) {
-                System.out.println("Radii ");
-            } else if (o == backgroundFill) {
-                System.out.println("FILL ");
-            }
-            System.out.println(old + " -> " + nw);
-        };
         backgroundFill.addListener(fillBinder);
         backgroundPaint.addListener(fillBinder);
         backgroundInset.addListener(fillBinder);
-//        backgroundRadii.addListener(fillListener);
-//        backgroundInset.addListener(fillListener);
-//        backgroundRadii.addListener(fillListener);
-//        backgroundFill.addListener(fillListener);
         backgroundFill.set(fill);
         layoutBoundsProperty().addListener(o -> updateArcs());
     }

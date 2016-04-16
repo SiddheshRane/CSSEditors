@@ -5,7 +5,6 @@
  */
 package csseditors;
 
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -15,7 +14,6 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Tab;
@@ -23,9 +21,6 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -91,7 +86,7 @@ public class LinearGradientEditor extends GradientEditor {
                 Insets p = getPadding();
                 //TODO:This assumes proportional gradient. Modify it to accept absolute values
                 double x = (event.getX() - p.getLeft()) / (getWidth() - p.getLeft() - p.getRight());
-                
+
                 if (x > 1) {
                     x = 1;
                 } else if (x < 0) {
@@ -104,7 +99,7 @@ public class LinearGradientEditor extends GradientEditor {
                 } else if (y < 0) {
                     y = 0;
                 }
-                
+
                 if (event.getTarget() == start) {
                     setStartX(x);
                     setStartY(y);
@@ -112,9 +107,8 @@ public class LinearGradientEditor extends GradientEditor {
                     setEndX(x);
                     setEndY(y);
                 }
-                
                 requestLayout();
-                
+
             } else if (event.getTarget() instanceof StackPane) {
                 //update the offset of the dragged stop
                 StackPane p = (StackPane) event.getTarget();
@@ -127,26 +121,27 @@ public class LinearGradientEditor extends GradientEditor {
             }
         }
     };
+
     public LinearGradientEditor() {
         //initialise
         start = new Region();
         end = new Region();
         line = new Line();
         cycleMethodBox = new ComboBox<>(FXCollections.observableArrayList(CycleMethod.values()));
-        
+
         cycleMethodBox.valueProperty().bindBidirectional(cycleMethodProperty());
         cycleMethodBox.setVisibleRowCount(3);
         cycleMethodBox.getStyleClass().add("cycle-method");
-        
+
         //css styles
         getStylesheets().add("/csseditors/gradients.css");
         getStyleClass().add("lge");
         setPrefSize(200, 400);
-        
+
         start.getStyleClass().add("start");
         end.getStyleClass().add("end");
         line.getStyleClass().add("line");
-        
+
         Text t = new Text("CycleMethod");
         HBox h = new HBox(t, cycleMethodBox);
         h.getStyleClass().add("cycle-method-hbox");
@@ -155,11 +150,11 @@ public class LinearGradientEditor extends GradientEditor {
         getChildren().addAll(line, start, end);
         addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
         addEventHandler(MouseEvent.MOUSE_DRAGGED, onDrag);
-        
+
         addStop(new Stop(0, Color.ALICEBLUE));
         addStop(new Stop(.3, Color.SKYBLUE));
         addStop(new Stop(0.8, Color.STEELBLUE));
-        
+
     }
 
     public double getStartX() {
@@ -173,7 +168,6 @@ public class LinearGradientEditor extends GradientEditor {
     public DoubleProperty startXProperty() {
         return startX;
     }
-
 
     public double getStartY() {
         return startY.get();
@@ -210,8 +204,6 @@ public class LinearGradientEditor extends GradientEditor {
     public DoubleProperty endYProperty() {
         return endY;
     }
- 
-
 
     public LinearGradient getGradient() {
         return gradient.get();
@@ -224,7 +216,6 @@ public class LinearGradientEditor extends GradientEditor {
     public ObjectProperty gradientProperty() {
         return gradient;
     }
-
 
     @Override
     public double stopLayoutX(double t) {
@@ -311,10 +302,9 @@ public class LinearGradientEditor extends GradientEditor {
 
     @Override
     public void updateGradient() {
-        LinearGradient lg = new LinearGradient(getStartX(), getStartY(), getEndX(), getEndY(),isProportional() , getCycleMethod(), getStops());
+        LinearGradient lg = new LinearGradient(getStartX(), getStartY(), getEndX(), getEndY(), isProportional(), getCycleMethod(), getStops());
         gradient.set(lg);
-        setBackground(new Background(new BackgroundFill(lg, CornerRadii.EMPTY, getPadding())));
-
+//        setBackground(new Background(new BackgroundFill(lg, CornerRadii.EMPTY, getPadding())));
     }
 
     private void enableEndPoints(boolean activate) {
@@ -330,7 +320,6 @@ public class LinearGradientEditor extends GradientEditor {
         end.setMouseTransparent(!activate);
         line.setDisable(activate);
     }
-
 
     //<editor-fold defaultstate="collapsed" desc="LGEControls">
     class LGEControls extends TabPane {

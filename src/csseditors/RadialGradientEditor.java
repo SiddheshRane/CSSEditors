@@ -53,6 +53,7 @@ public class RadialGradientEditor extends GradientEditor {
     double ellipseOffset;
     double mouseX, mouseY;
     boolean showingEndPoints;
+    boolean localChange;
 
     private final ObjectProperty<RadialGradient> gradient = new SimpleObjectProperty<>();
     //<editor-fold defaultstate="collapsed" desc="controls">
@@ -276,6 +277,12 @@ public class RadialGradientEditor extends GradientEditor {
         clip.heightProperty().bind(heightProperty());
         setClip(clip);
 //event handlers
+        gradient.addListener((ob, ol, nw) -> {
+            if (!localChange) {
+                //TODO: Whenever the gradient is changed externally it should update items here
+            }
+        });
+
         InvalidationListener redraw = o -> {
             updateGradient();
             layoutChildren();
@@ -530,7 +537,7 @@ public class RadialGradientEditor extends GradientEditor {
                 getStops()
         );
         gradient.set(rg);
-        setBackground(new Background(new BackgroundFill(rg, CornerRadii.EMPTY, Insets.EMPTY)));
+//        setBackground(new Background(new BackgroundFill(rg, CornerRadii.EMPTY, Insets.EMPTY)));
         layoutStops();
     }
 

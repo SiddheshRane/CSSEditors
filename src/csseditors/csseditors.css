@@ -75,13 +75,13 @@ and open the template in the editor.
 
 .experimental {
 
-    -fx-background-color : #b8d5ed;
-    -fx-background-radius: 0%;
-    -fx-color-label-visible: false;
+    -fx-background-color : blueviolet;
+    /*-fx-background-radius: ;*/
+    -fx-color-label-visible: true;
 
 }
 .experimental .arrow-button{
-    visibility:hidden;
+    visibility:visible;
     -fx-background-color:green;
     -fx-background-radius: 0% 50% 50% 0%;
 
@@ -95,10 +95,13 @@ and open the template in the editor.
 }
 .experimental .picker-color-rect {
 
-    -fx-arc-width: 10;
-    -fx-arc-height: 10;
+    -fx-arc-width: 0;
+    -fx-arc-height: 0;
 }
 
 .gradient-test {
     -fx-background-color: linear-gradient(from 0% 0% to 50% 50% , wheat , blueviolet);
 }
+
+
+

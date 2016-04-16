@@ -15,7 +15,7 @@ public class StopList extends ListView<Stop> {
         setCellFactory((lv) -> {
             return new StopCell();
         });
-
+        getStylesheets().add("/csseditors/gradients.css");
         setOnEditCommit((ListView.EditEvent<Stop> b) -> {
             final ObservableList<Stop> items = b.getSource().getItems();
             if (b.getNewValue() == null) {
