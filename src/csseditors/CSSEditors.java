@@ -55,9 +55,9 @@ public class CSSEditors extends Application {
 //        linearGradientEditorTest(primaryStage);
 //        stopCellTest(primaryStage);
 //        LinearGradientEditorTest(primaryStage);
-        RadialGradientEditorTest(primaryStage);
+//        RadialGradientEditorTest(primaryStage);
 //        backgroundLayerTest(primaryStage);
-//        backgroundLayerTest2(primaryStage);
+        backgroundLayerTest2(primaryStage);
 //        compositeAppTest(primaryStage);
     }
 
@@ -295,7 +295,11 @@ public class CSSEditors extends Application {
         });
         //add everything to a ScrollPane
         FlowPane flow = new FlowPane(10, 5,stack);
+        flow.setStyle("-fx-border-color:blue;");
+        
         ScrollPane scrollPane = new ScrollPane(flow);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
         Scene scene = new Scene(scrollPane);
         //apply css to the button
         scrollPane.layout();
@@ -313,6 +317,8 @@ public class CSSEditors extends Application {
             //create a BackgroundLayer for each BackgroundFill
             BackgroundLayer bglayer = new BackgroundLayer(fill);
             bglayer.backgroundFillProperty().addListener(cl);
+            bglayer.prefWidthProperty().bind(stack.widthProperty());
+            bglayer.prefWidthProperty().bind(stack.heightProperty());
             bglayers.add(bglayer);
             flow.getChildren().add(bglayer);
             if (fill.getFill() instanceof LinearGradient) {

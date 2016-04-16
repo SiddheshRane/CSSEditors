@@ -1,9 +1,11 @@
 package csseditors;
 
 import drag.Draggable;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
+import javafx.beans.value.ChangeListener;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.input.MouseEvent;
@@ -25,13 +27,86 @@ import javafx.scene.shape.ArcType;
 public class BackgroundLayer extends StackPane {
 
     private static final String CORNER_RADII_ARC = "cornerRadiiArc";
+    private static final EventHandler<MouseEvent> mouseHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            //PENDING: Transfer InsetsDraggable code here
+        }
+    };
 
-    //<editor-fold defaultstate="collapsed" desc="backgroundFill property">
     /**
      * The {@code BackgroundFill} that is being edited. Users should bind to
      * this property to listen to changes
      */
     private final ObjectProperty<BackgroundFill> backgroundFill = new SimpleObjectProperty<>();
+    private final ObjectProperty<Insets> backgroundInset = new SimpleObjectProperty<>();
+    private final ObjectProperty<CornerRadii> backgroundRadii = new SimpleObjectProperty<>();
+    private final ObjectProperty<Paint> backgroundPaint = new SimpleObjectProperty<>();
+    Background current;
+    Arc arcTL;
+    Arc arcTR;
+    Arc arcBR;
+    Arc arcBL;
+    private boolean updating;
+
+    public BackgroundLayer() {
+        this(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY);
+    }
+
+    public BackgroundLayer(Paint paint, CornerRadii radii, Insets insets) {
+        this(new BackgroundFill(paint, radii, insets));
+    }
+
+    public BackgroundLayer(BackgroundFill fill) {
+        initArcs();
+        setSnapToPixel(false);
+        setPickOnBounds(false);
+
+        ChangeListener fillBinder = (ob, old, now) -> {
+            if (!updating) {
+                updating = true;
+                if (ob == backgroundFill) {
+                    setBackgroundPaint(backgroundFill.get().getFill());
+                    setBackgroundInset(backgroundFill.get().getInsets());
+                    setBackgroundRadii(backgroundFill.get().getRadii());
+                } else {
+                    Insets insets = getBackgroundFill().getInsets();
+                    CornerRadii radii = getBackgroundFill().getRadii();
+                    Paint paint = getBackgroundFill().getFill();
+                    if (ob == backgroundPaint) {
+                        setBackgroundFill(new BackgroundFill(getBackgroundPaint(), radii, insets));
+                    } else if (ob == backgroundInset) {
+                        setBackgroundFill(new BackgroundFill(paint, radii, getBackgroundInset()));
+                    } else if (ob == backgroundRadii) {
+                        setBackgroundFill(new BackgroundFill(paint, getBackgroundRadii(), insets));
+                    }
+                }
+                updating = false;
+            }
+            updateBackgroundFill();
+        };
+        ChangeListener fillListener = (o, old, nw) -> {
+            if (o == backgroundPaint) {
+                System.out.println("Paint ");
+            } else if (o == backgroundInset) {
+                System.out.println("Inset ");
+            } else if (o == backgroundRadii) {
+                System.out.println("Radii ");
+            } else if (o == backgroundFill) {
+                System.out.println("FILL ");
+            }
+            System.out.println(old + " -> " + nw);
+        };
+        backgroundFill.addListener(fillBinder);
+        backgroundPaint.addListener(fillBinder);
+        backgroundInset.addListener(fillBinder);
+//        backgroundRadii.addListener(fillListener);
+//        backgroundInset.addListener(fillListener);
+//        backgroundRadii.addListener(fillListener);
+//        backgroundFill.addListener(fillListener);
+        backgroundFill.set(fill);
+        layoutBoundsProperty().addListener(o -> updateArcs());
+    }
 
     public BackgroundFill getBackgroundFill() {
         return backgroundFill.get();
@@ -44,41 +119,48 @@ public class BackgroundLayer extends StackPane {
     public ObjectProperty<BackgroundFill> backgroundFillProperty() {
         return backgroundFill;
     }
-//</editor-fold>
 
-    Background original;
-    Background current;
-
-    Arc arcTL, arcTR, arcBR, arcBL;
-
-    public BackgroundLayer() {
-        this(Color.BLACK, CornerRadii.EMPTY, Insets.EMPTY);
+    public Insets getBackgroundInset() {
+        return backgroundInset.get();
     }
 
-    public BackgroundLayer(Paint paint, CornerRadii radii, Insets insets) {
-        this(new BackgroundFill(paint, radii, insets));
+    public void setBackgroundInset(Insets value) {
+        backgroundInset.set(value);
     }
 
-    public BackgroundLayer(BackgroundFill fill) {
-        backgroundFill.set(fill);
-        backgroundFill.addListener(
-                (ObservableValue<? extends BackgroundFill> observable,
-                        BackgroundFill oldValue,
-                        BackgroundFill newValue) -> {
-                    updateBackgroundFill();
-                });
+    public ObjectProperty<Insets> backgroundInsetProperty() {
+        return backgroundInset;
+    }
 
-        initArcs();
-        setSnapToPixel(false);
-        setPickOnBounds(false);
-        original = current;
+    public CornerRadii getBackgroundRadii() {
+        return backgroundRadii.get();
+    }
+
+    public void setBackgroundRadii(CornerRadii value) {
+        backgroundRadii.set(value);
+    }
+
+    public ObjectProperty backgroundRadiiProperty() {
+        return backgroundRadii;
+    }
+
+    public Paint getBackgroundPaint() {
+        return backgroundPaint.get();
+    }
+
+    public void setBackgroundPaint(Paint value) {
+        backgroundPaint.set(value);
+    }
+
+    public ObjectProperty<Paint> backgroundPaintProperty() {
+        return backgroundPaint;
     }
 
     public void updateBackgroundFill() {
         setPadding(backgroundFill.get().getInsets());
         current = new Background(backgroundFill.get());
         setBackground(current);
-        checkCurveOverlap(getWidth(), getHeight());
+        updateArcs();
     }
 
     public void showBackground(boolean b) {
@@ -109,7 +191,7 @@ public class BackgroundLayer extends StackPane {
 
     private void initArcs() {
         //top-left arc
-        CornerRadii radii = backgroundFill.get().getRadii();
+        CornerRadii radii = CornerRadii.EMPTY;
 
         double hr = radii.getTopLeftHorizontalRadius();
         double vr = radii.getTopLeftVerticalRadius();
@@ -159,29 +241,20 @@ public class BackgroundLayer extends StackPane {
         draggable.drag(this);
     }
 
-    private void resizeArcs(double f) {
-        CornerRadii radii = backgroundFill.get().getRadii();
-        arcTL.setRadiusX(arcTL.getRadiusX() * f);
-        arcTL.setRadiusY(arcTL.getRadiusY() * f);
-
-        arcTR.setRadiusX(arcTR.getRadiusX() * f);
-        arcTR.setRadiusY(arcTR.getRadiusY() * f);
-
-        arcBR.setRadiusX(arcBR.getRadiusX() * f);
-        arcBR.setRadiusY(arcBR.getRadiusY() * f);
-
-        arcBL.setRadiusX(arcBL.getRadiusX() * f);
-        arcBL.setRadiusY(arcBL.getRadiusY() * f);
-
-    }
-
-    private void checkCurveOverlap(double w, double h) {
+    /**
+     * Checks if the arcs are overlapping and resizes them to fit without
+     * overlapping. Call this when the
+     */
+    /**
+     * Updates the arc sizes whenever the cornerRadii or the layout bounds of
+     * the container change.
+     */
+    private void updateArcs() {
         Insets insets = backgroundFill.get().getInsets();
         CornerRadii radii = backgroundFill.get().getRadii();
-
-        w = (w - insets.getLeft() - insets.getRight());
-        h = (h - insets.getTop() - insets.getBottom());
-        double top, bottom, f = 1, mul = 1;
+        double w = (getWidth() - insets.getLeft() - insets.getRight());
+        double h = (getHeight() - insets.getTop() - insets.getBottom());
+        double mul = 1;
 
         //Firstly apply the radii specified in backgroundRadii to the arcs
         //for horizontal component mul = w for percentage values
@@ -229,31 +302,33 @@ public class BackgroundLayer extends StackPane {
         }
         arcBL.setRadiusY(radii.getBottomLeftVerticalRadius() * mul);
 
+        double top, bottom, f;
         //Check if these radii dont exceed the layout bounds
         //calculate the least value of f for horizontal component
         top = arcTL.getRadiusX() + arcTR.getRadiusX();
         bottom = arcBL.getRadiusX() + arcBR.getRadiusX();
-        top = top > bottom ? top : bottom;
-        bottom = w / top;
-        if (bottom < 1) {
-            f = bottom;
-        }
+        double larger = top > bottom ? top : bottom;
+        double fx = w / larger;
         //Now calculate the least value of f for vertical component
         top = arcTL.getRadiusY() + arcBL.getRadiusY();
         bottom = arcTR.getRadiusY() + arcBR.getRadiusY();
-        top = top > bottom ? top : bottom;
-        bottom = h / top;
+        larger = top > bottom ? top : bottom;
+        double fy = h / larger;
         //choose the smaller value between horizontal and vertical f
-        f = f < bottom ? f : bottom;
+        f = fx < fy ? fx : fy;
         if (f < 1 && f > 0) {
-            resizeArcs(f);
-        }
-    }
+            arcTL.setRadiusX(arcTL.getRadiusX() * f);
+            arcTL.setRadiusY(arcTL.getRadiusY() * f);
 
-    @Override
-    protected void layoutChildren() {
-        checkCurveOverlap(getWidth(), getHeight());
-        super.layoutChildren();
+            arcTR.setRadiusX(arcTR.getRadiusX() * f);
+            arcTR.setRadiusY(arcTR.getRadiusY() * f);
+
+            arcBR.setRadiusX(arcBR.getRadiusX() * f);
+            arcBR.setRadiusY(arcBR.getRadiusY() * f);
+
+            arcBL.setRadiusX(arcBL.getRadiusX() * f);
+            arcBL.setRadiusY(arcBL.getRadiusY() * f);
+        }
     }
 
     private final class InsetsDraggable extends Draggable {
