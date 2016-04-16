@@ -7,7 +7,6 @@ package csseditors;
 
 import java.util.Map;
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -17,6 +16,7 @@ import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -291,8 +291,10 @@ public class RadialGradientEditor extends GradientEditor {
         setOnMouseMoved(mouseHandler);
         setOnMouseDragged(mouseHandler);
         setOnMousePressed(mouseHandler);
-//        addEventHandler(MouseEvent.MOUSE_MOVED, mouseHandler);
-
+        setOnScroll((ScrollEvent se) -> {
+            //PENDING: this causes negative radius if you scroll down too much. check if we need any fix
+            setRadius(getRadius() + se.getDeltaY() / getHeight() / 2);
+        });
         getChildren().addAll(line, ellipse, add, rCenter, rFocus, rRadius);
 
         addStop(new Stop(0, Color.ALICEBLUE));
