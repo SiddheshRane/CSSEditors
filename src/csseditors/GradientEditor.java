@@ -7,6 +7,7 @@ package csseditors;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -54,38 +55,62 @@ public abstract class GradientEditor extends Pane {
         stopMap = new HashMap<>(7);
         stops = FXCollections.observableArrayList();
         stopsListener = new ListChangeListener<Stop>() {
+            boolean sorting;
             @Override
             public void onChanged(ListChangeListener.Change<? extends Stop> c) {
+                if (sorting) {
+                    return ;
+                }
                 boolean sort = false;
                 while (c.next()) {
                     if (c.wasReplaced()) {
-                        //check whether the replaced Stop needs sorting
-                        Stop old = c.getRemoved().get(0);
-                        Stop now = stops.get(c.getFrom());
-                        int index = c.getFrom();
-                        double newOffset = now.getOffset();
-                        double floorOffset = index == 0 ? -1 : stops.get(index - 1).getOffset();
-                        double ceilOffset = ++index == stops.size() ? 2 : stops.get(index).getOffset();
-                        //Check if the new Stop fits in the same spot
-                        if (newOffset < floorOffset || newOffset > ceilOffset) {
-                            //mark for sorting
-                            sort = true;
+                        for (int i = c.getFrom(); i < c.getTo(); i++) {
+                            Stop old = c.getRemoved().get(i-c.getFrom());
+                            Stop now = stops.get(i);
+                            //check whether the replaced Stop needs sorting
+                            if (!sort) {/*Skip the check if you are going to sort anyway*/
+                                int index = i;
+                                double newOffset = now.getOffset();
+                                double floorOffset = index == 0 ? -1 : stops.get(index - 1).getOffset();
+                                double ceilOffset = ++index == stops.size() ? 2 : stops.get(index).getOffset();
+                                //Check if the new Stop fits in the same spot
+                                if (newOffset < floorOffset || newOffset > ceilOffset) {
+                                    //mark for sorting
+                                    sort = true;
+                                }
+                            }
+                            stopMap.entrySet().stream().filter(e -> e.getValue() == old).findAny().ifPresent((t) -> {
+                                t.setValue(now);
+                                t.getKey().setBackground(new Background(new BackgroundFill(now.getColor(), ROUND, Insets.EMPTY)));
+                            });
+                            
                         }
-                        stopMap.entrySet().stream().filter(e -> e.getValue() == old).findAny().ifPresent((t) -> {
-                            t.setValue(now);
-                        });
-
                     } else if (c.wasAdded()) {
+                        for (Stop s : c.getAddedSubList()) {
+                            StackPane stopMark = new StackPane();
+                            stopMark.getStyleClass().add("stop");
+                            stopMark.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
+                            //TODO: Color picker consumes all input events.ColorPicker buggy on linux
+//                            final ColorPicker colorPicker = new ColorPicker(s.getColor());
+//                            colorPicker.valueProperty().addListener((ob, old, nw) -> updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw)));
+//                            stopMark.getChildren().add(colorPicker);
+                            stopMap.put(stopMark, s);
+                            getChildren().add(stopMark);
+                        }
                         sort = true;
+                    } else if (c.wasRemoved()) {
+                        for (Stop s : c.getRemoved()) {
+                            StackPane p = stopMap.entrySet().stream().filter(entry -> entry.getValue() == s).findFirst().map(Map.Entry::getKey).get();
+                            stopMap.remove(p);
+                            getChildren().remove(p);
+                        }
                     }
-                    /*else if (c.wasRemoved()) {
-                     //do nothing
-                     }*/
                 }
                 if (sort) {
+                    sorting = true;
                     stops.sort(STOP_COMPARATOR);
+                    sorting = false;
                 }
-                updateGradient();
             }
         };
         stops.addListener(stopsListener);
@@ -107,9 +132,11 @@ public abstract class GradientEditor extends Pane {
     public CycleMethod getCycleMethod() {
         return cycleMethod.get();
     }
+
     public void setCycleMethod(CycleMethod value) {
         cycleMethod.set(value);
     }
+
     public ObjectProperty<CycleMethod> cycleMethodProperty() {
         return cycleMethod;
     }
@@ -117,56 +144,29 @@ public abstract class GradientEditor extends Pane {
     public boolean isProportional() {
         return proportional.get();
     }
+
     public void setProportional(boolean value) {
         proportional.set(value);
     }
+
     public BooleanProperty proportionalProperty() {
         return proportional;
     }
     //</editor-fold>
 
-    protected StackPane addStop(Stop s) {
-        StackPane stopMark = new StackPane();
-        stopMark.getStyleClass().add("stop");
-        stopMark.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
-        //TODO: Color picker consumes all input events.
-        final ColorPicker colorPicker = new ColorPicker(s.getColor());
-        colorPicker.valueProperty().addListener((ob, old, nw) -> updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw)));
-        stopMark.getChildren().add(colorPicker);
-     
-        stopMap.put(stopMark, s);
+    protected void addStop(Stop s) {
         stops.add(s);
-        stops.sort(STOP_COMPARATOR);
-        getChildren().add(stopMark);
-        updateGradient();
-        return stopMark;
     }
 
     public void updateStop(StackPane p, Stop s) {
-        Stop old = stopMap.replace(p, s);
+        Stop old = stopMap.get(p);
         int index = stops.indexOf(old);
         stops.set(index, s);
-
-        double newOffset = s.getOffset();
-        double floorOffset = index == 0 ? -1 : stops.get(index - 1).getOffset();
-        double ceilOffset = ++index == stops.size() ? 2 : stops.get(index).getOffset();
-        //Check if the new Stop fits in the same spot
-        if (newOffset < floorOffset || newOffset > ceilOffset) {
-            //sort the stops
-            stops.sort(STOP_COMPARATOR);
-        }
-
-        p.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
-        layoutStop(p, s);
-        updateGradient();
     }
 
     public void deleteStop(StackPane p) {
-        Stop removed = stopMap.remove(p);
-        stops.remove(removed);
-        //do not sort. List is already sorted
-        getChildren().remove(p);
-        updateGradient();
+        Stop toRemove = stopMap.get(p);
+        stops.remove(toRemove);
     }
 
     public final ObservableList<Stop> getStops() {
@@ -190,12 +190,6 @@ public abstract class GradientEditor extends Pane {
 
     public abstract double stopLayoutY(double t);
 
-    @Override
-    protected void layoutChildren() {
-        super.layoutChildren();
-//        layoutStops();
-    }
-
     /**
      * Calculates the stop offset at a particular coordinate in the layout
      * bounds of unitBox. Calculates the offset at the projection of the point
@@ -208,7 +202,5 @@ public abstract class GradientEditor extends Pane {
      */
     public abstract double getOffset(double mx, double my);
 
-    //PENDING: This should be removed. The gradient must update itself by observing its dependencies
-    public abstract void updateGradient();
 
 }
