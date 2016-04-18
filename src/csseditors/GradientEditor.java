@@ -7,6 +7,7 @@ package csseditors;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -56,16 +57,20 @@ public abstract class GradientEditor extends Pane {
         stops = FXCollections.observableArrayList();
         stopsListener = new ListChangeListener<Stop>() {
             boolean sorting;
+
             @Override
             public void onChanged(ListChangeListener.Change<? extends Stop> c) {
                 if (sorting) {
-                    return ;
+                    return;
                 }
                 boolean sort = false;
                 while (c.next()) {
                     if (c.wasReplaced()) {
-                        for (int i = c.getFrom(); i < c.getTo(); i++) {
-                            Stop old = c.getRemoved().get(i-c.getFrom());
+                        int diff = c.getAddedSize() - c.getRemovedSize();
+                        int intersectionTill = c.getTo() - (diff > 0 ? diff : 0);
+                        //reuse existing StackPanes for the replaced components
+                        for (int i = c.getFrom(); i < intersectionTill; i++) {
+                            Stop old = c.getRemoved().get(i - c.getFrom());
                             Stop now = stops.get(i);
                             //check whether the replaced Stop needs sorting
                             if (!sort) {/*Skip the check if you are going to sort anyway*/
@@ -75,7 +80,6 @@ public abstract class GradientEditor extends Pane {
                                 double ceilOffset = ++index == stops.size() ? 2 : stops.get(index).getOffset();
                                 //Check if the new Stop fits in the same spot
                                 if (newOffset < floorOffset || newOffset > ceilOffset) {
-                                    //mark for sorting
                                     sort = true;
                                 }
                             }
@@ -83,27 +87,21 @@ public abstract class GradientEditor extends Pane {
                                 t.setValue(now);
                                 t.getKey().setBackground(new Background(new BackgroundFill(now.getColor(), ROUND, Insets.EMPTY)));
                             });
-                            
+                        }
+                        if (diff > 0) {
+                            //more to be added than removed. Extra StackPanes need to be created
+                            final List<? extends Stop> subList = c.getAddedSubList().subList(intersectionTill, c.getTo());
+                            addRange(subList);
+                        } else if (diff < 0) {
+                            //more to be removed than added. Existing StackPanes need to be removed
+                            final List<? extends Stop> subList = c.getRemoved().subList(-diff+1, c.getRemovedSize());
+                            removeRange(subList);
                         }
                     } else if (c.wasAdded()) {
-                        for (Stop s : c.getAddedSubList()) {
-                            StackPane stopMark = new StackPane();
-                            stopMark.getStyleClass().add("stop");
-                            stopMark.setBackground(new Background(new BackgroundFill(s.getColor(), ROUND, Insets.EMPTY)));
-                            //TODO: Color picker consumes all input events.ColorPicker buggy on linux
-//                            final ColorPicker colorPicker = new ColorPicker(s.getColor());
-//                            colorPicker.valueProperty().addListener((ob, old, nw) -> updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw)));
-//                            stopMark.getChildren().add(colorPicker);
-                            stopMap.put(stopMark, s);
-                            getChildren().add(stopMark);
-                        }
+                        addRange(c.getAddedSubList());
                         sort = true;
                     } else if (c.wasRemoved()) {
-                        for (Stop s : c.getRemoved()) {
-                            StackPane p = stopMap.entrySet().stream().filter(entry -> entry.getValue() == s).findFirst().map(Map.Entry::getKey).get();
-                            stopMap.remove(p);
-                            getChildren().remove(p);
-                        }
+                        removeRange(c.getRemoved());
                     }
                 }
                 if (sort) {
@@ -154,6 +152,28 @@ public abstract class GradientEditor extends Pane {
     }
     //</editor-fold>
 
+    private void removeRange(List<? extends Stop> stops) {
+        for (Stop s : stops) {
+            StackPane p = stopMap.entrySet().stream().filter(entry -> entry.getValue() == s).findFirst().map(Map.Entry::getKey).get();
+            stopMap.remove(p);
+            getChildren().remove(p);
+        }
+    }
+
+    private void addRange(List<? extends Stop> addedStops) {
+        for (Stop addedStop : addedStops) {
+            StackPane stopMark = new StackPane();
+            stopMark.getStyleClass().add("stop");
+            stopMark.setBackground(new Background(new BackgroundFill(addedStop.getColor(), ROUND, Insets.EMPTY)));
+            //TODO: Color picker consumes all input events.ColorPicker buggy on linux
+//                            final ColorPicker colorPicker = new ColorPicker(s.getColor());
+//                            colorPicker.valueProperty().addListener((ob, old, nw) -> updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw)));
+//                            stopMark.getChildren().add(colorPicker);
+            stopMap.put(stopMark, addedStop);
+            getChildren().add(stopMark);
+        }
+    }
+
     protected void addStop(Stop s) {
         stops.add(s);
     }
@@ -201,6 +221,5 @@ public abstract class GradientEditor extends Pane {
      * stops line.
      */
     public abstract double getOffset(double mx, double my);
-
 
 }
