@@ -1,7 +1,6 @@
 package csseditors;
 
 import drag.Draggable;
-import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -27,7 +26,7 @@ import javafx.scene.shape.ArcType;
 public class BackgroundLayer extends StackPane {
 
     private static final String CORNER_RADII_ARC = "cornerRadiiArc";
-    private static final EventHandler<MouseEvent> mouseHandler = new EventHandler<MouseEvent>() {
+    private static final EventHandler<MouseEvent> MOUSE_HANDLER  = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             //PENDING: Transfer InsetsDraggable code here

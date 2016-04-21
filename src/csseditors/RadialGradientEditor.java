@@ -7,19 +7,16 @@ package csseditors;
 
 import java.util.Map;
 import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
-import javafx.geometry.Insets;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -56,49 +53,7 @@ public class RadialGradientEditor extends GradientEditor {
     boolean localChange;
 
     private final ObjectProperty<RadialGradient> gradient = new SimpleObjectProperty<>();
-    //<editor-fold defaultstate="collapsed" desc="controls">
-    //TODO: Shift UI Controls to a separate class
-    /* private void initUIControls() {
-    Text cycleText = new Text("Cycle Method");
-    Text radiusText = new Text("Radius");
-    Text focusText = new Text("Focus Distance");
-    Text angleText = new Text("Focus Angle");
-    GridPane gridPane = new GridPane();
-    gridPane.addColumn(0, cycleText, radiusText, focusText, angleText);
-    gridPane.addColumn(1, cycleMethodBox, sRadius, sFocus, sFocusAngle);
-    getChildren().add(gridPane);
-    gridPane.setVgap(5);
-    
-    cycleMethodBox.valueProperty().bindBidirectional(cycleMethod);
-    sRadius.valueProperty().addListener(controlListener);
-    sFocus.valueProperty().addListener(controlListener);
-    sFocusAngle.valueProperty().addListener(controlListener);
-    
-    sRadius.setBlockIncrement(0.1);
-    sFocus.setBlockIncrement(0.1);
-    
-    }*/
 
- /* private void updateUIControls() {
-    localChange = true;
-    sRadius.setValue(r);
-    sFocus.setValue(f);
-    sFocusAngle.setValue(fangle);
-    localChange = false;
-    }
-    
-    InvalidationListener controlListener = (Observable observable) -> {
-    if (!localChange) {
-    r = sRadius.getValue();
-    f = sFocus.getValue();
-    fangle = sFocusAngle.getValue();
-    if (selectedStop != null) {
-    selectStop(null);
-    }
-    requestLayout();
-    }
-    };*/
-//</editor-fold>
     EventHandler<MouseEvent> mouseHandler = new EventHandler<MouseEvent>() {
 
         double cx, cy, stopcx, stopcy;
@@ -202,11 +157,13 @@ public class RadialGradientEditor extends GradientEditor {
 
 //                selectedStop.setVisible(false);
             } else { //drag center
+                hoverPane = null;
                 double ncx = cx + (event.getX() - pressX) / getWidth();
                 double ncy = cy + (event.getY() - pressY) / getHeight();
                 setCenterX(ncx > 1 ? 1 : ncx < 0 ? 0 : ncx);
                 setCenterY(ncy > 1 ? 1 : ncy < 0 ? 0 : ncy);
             }
+            event.consume();
         }
 
         void click(MouseEvent event) {
@@ -260,8 +217,6 @@ public class RadialGradientEditor extends GradientEditor {
         line = new Line();
         ellipse = new Ellipse();
         add = new StackPane();
-//        cycleMethodBox = new ComboBox<>(FXCollections.observableArrayList(CycleMethod.values()));
-
 //css styles
         setPrefSize(200, 200);
         getStylesheets().add("/csseditors/gradients.css");
@@ -271,29 +226,68 @@ public class RadialGradientEditor extends GradientEditor {
         rRadius.getStyleClass().add("radius");
         line.getStyleClass().add("line");
         add.getStyleClass().add("add");
+        ellipse.setStroke(Color.RED);
+        ellipse.setFill(Color.TRANSPARENT);
+        ellipse.setMouseTransparent(true);
 //set clip so that the ellipse does not go outside this pane
         Rectangle clip = new Rectangle();
         clip.widthProperty().bind(widthProperty());
         clip.heightProperty().bind(heightProperty());
         setClip(clip);
-//event handlers
-        gradient.addListener((ob, ol, nw) -> {
-            if (!localChange) {
-                //TODO: Whenever the gradient is changed externally it should update items here
-            }
-        });
 
-        InvalidationListener redraw = o -> {
-            updateGradient();
-            layoutChildren();
+        getChildren().addAll(line, ellipse, add, rCenter, rFocus, rRadius);
+
+//event handlers
+//        addStop(new Stop(0, Color.ALICEBLUE));
+//        addStop(new Stop(0.5, Color.SALMON));
+//        addStop(new Stop(1, Color.DARKRED));
+        InvalidationListener gradientBinder = new InvalidationListener() {
+            boolean updating;
+
+            @Override
+            public void invalidated(Observable observable) {
+                if (updating) {
+                    return;
+                }
+                updating = true;
+                if (observable == gradient) {
+                    RadialGradient grad = getGradient();
+                    getStops().setAll(grad.getStops());
+                    setCycleMethod(grad.getCycleMethod());
+                    setProportional(grad.isProportional());
+                    setRadius(grad.getRadius());
+                    setFocus(grad.getFocusDistance());
+                    setFocusAngle(grad.getFocusAngle());
+                    setCenterX(grad.getCenterX());
+                    setCenterY(grad.getCenterY());
+                } else if (observable == getStops()
+                        || (observable == cycleMethodProperty())
+                        || (observable == proportionalProperty())
+                        || (observable == radius)
+                        || (observable == focus)
+                        || (observable == focusAngle)
+                        || (observable == centerX)
+                        || (observable == centerY)) {
+                    setGradient(new RadialGradient(
+                            getFocusAngle(), getFocus(), getCenterX(), getCenterY(), getRadius(),
+                            isProportional(),
+                            getCycleMethod(),
+                            getStops()
+                    ));
+                }
+                updating = false;
+                requestLayout();
+            }
         };
-        radius.addListener(redraw);
-        focus.addListener(redraw);
-        centerX.addListener(redraw);
-        centerY.addListener(redraw);
-        focusAngle.addListener(redraw);
-        cycleMethodProperty().addListener(redraw);
-        proportionalProperty().addListener(redraw);
+        gradient.addListener(gradientBinder);
+        getStops().addListener(gradientBinder);
+        proportionalProperty().addListener(gradientBinder);
+        cycleMethodProperty().addListener(gradientBinder);
+        radius.addListener(gradientBinder);
+        focus.addListener(gradientBinder);
+        focusAngle.addListener(gradientBinder);
+        centerX.addListener(gradientBinder);
+        centerY.addListener(gradientBinder);
         setOnMouseClicked(mouseHandler);
         setOnMouseMoved(mouseHandler);
         setOnMouseDragged(mouseHandler);
@@ -302,23 +296,21 @@ public class RadialGradientEditor extends GradientEditor {
             //PENDING: this causes negative radius if you scroll down too much. check if we need any fix
             setRadius(getRadius() + se.getDeltaY() / getHeight() / 2);
         });
-        getChildren().addAll(line, ellipse, add, rCenter, rFocus, rRadius);
-
-        addStop(new Stop(0, Color.ALICEBLUE));
-        addStop(new Stop(0.5, Color.SALMON));
-        addStop(new Stop(1, Color.DARKRED));
 
         showEndPoints(false);
 //        rCenter.layoutXProperty().bind(centerX.multiply(widthProperty()));
 //        rCenter.layoutYProperty().bind(centerY.multiply(heightProperty()));
-        ellipse.setStroke(Color.RED);
-        ellipse.setFill(Color.TRANSPARENT);
-        ellipse.setMouseTransparent(true);
+
         //FIXME: remove these ugly hacks later
         setOnMouseExited(e -> {
             ellipse.setOpacity(0);
         });
         setOnMouseEntered(ev -> ellipse.setOpacity(1));
+        
+        addStop(new Stop(0.1, Color.web("aaa")));
+        addStop(new Stop(0.345, Color.web("bbb")));
+        addStop(new Stop(0.678, Color.web("ccc")));
+        
     }
 
     public double getCenterX() {
@@ -527,19 +519,6 @@ public class RadialGradientEditor extends GradientEditor {
         return getNormalisedOffset(D);
     }
 //</editor-fold>
-
-    @Override
-    public void updateGradient() {
-        RadialGradient rg = new RadialGradient(
-                getFocusAngle(), getFocus(), getCenterX(), getCenterY(), getRadius(),
-                isProportional(),
-                getCycleMethod(),
-                getStops()
-        );
-        gradient.set(rg);
-//        setBackground(new Background(new BackgroundFill(rg, CornerRadii.EMPTY, Insets.EMPTY)));
-        layoutStops();
-    }
 
     public void showEndPoints(boolean activate) {
         for (StackPane p : stopMap.keySet()) {

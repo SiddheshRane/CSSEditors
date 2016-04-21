@@ -5,40 +5,42 @@
  */
 package csseditors;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import javafx.application.Application;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.scene.control.*;
 import javafx.scene.Scene;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.TilePane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.RadialGradient;
-import javafx.scene.paint.Stop;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.*;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Popup;
+import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
+import org.controlsfx.control.PopOver;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
+import javafx.animation.FadeTransition;
+import javafx.beans.binding.Bindings;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
+import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 
 /**
  *
@@ -54,12 +56,16 @@ public class CSSEditors extends Application {
 //        backgroundFillEditorTest(primaryStage);
 //        regionPropertiesTest(primaryStage);
 //        colorRectPaneTest(primaryStage);
+//        colorRectPaneTest2(primaryStage);
+//        popupControlTest(primaryStage);
+//        popoverControlTest(primaryStage);
 //        linearGradientEditorTest(primaryStage);
 //        stopCellTest(primaryStage);
 //        LinearGradientEditorTest(primaryStage);
-//        RadialGradientEditorTest(primaryStage);
+        RadialGradientEditorTest(primaryStage);
 //        backgroundLayerTest(primaryStage);
-        backgroundLayerTest2(primaryStage);
+//        backgroundLayerTest2(primaryStage);
+//        backgroundLayerTestFinal(primaryStage);
 //        backgroundLayerTest3(primaryStage);
 //        compositeAppTest(primaryStage);
     }
@@ -122,6 +128,70 @@ public class CSSEditors extends Application {
 
     }
 
+    public void colorRectPaneTest2(Stage s) {
+        Button button = new Button("Choose Color");
+        StackPane pane = new StackPane(button);
+        Popup pop = new Popup();
+        ColorRectPane colorRectPane = new ColorRectPane();
+        pop.getContent().add(colorRectPane);
+        pop.setAnchorLocation(PopupWindow.AnchorLocation.CONTENT_BOTTOM_LEFT);
+        pop.setAutoHide(true);
+        button.setOnAction(ae -> {
+            Point2D loc = button.localToScreen(0, 0);
+            pop.show(button, loc.getX(), loc.getY());
+        });
+        Scene scene = new Scene(pane);
+        s.setTitle("ColorRectPane test");
+        s.setScene(scene);
+        s.show();
+    }
+
+    public void popupControlTest(Stage s) {
+        Button b = new Button("Popup Control");
+        StackPane pane = new StackPane(b);
+        Scene scene = new Scene(pane);
+        PopupControl c = new PopupControl();
+        c.setStyle("-fx-background-color:tomato");
+        b.setOnAction(ae -> c.show(b, 0, 0));
+
+        s.setTitle("Popup Control  test");
+        s.setScene(scene);
+        s.show();
+    }
+
+    public void popoverControlTest(Stage s) {
+        Button b = new Button("Popup Control");
+        Button b2 = new Button("Popup Control2");
+        PopOver pop = new PopOver();
+        pop.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+        pop.setDetachedTitle("Pick Color");
+        ColorRectPane colorRectPane = new ColorRectPane();
+        StackPane stackPane = new StackPane(colorRectPane);
+        stackPane.setPadding(new Insets(7));
+        pop.setContentNode(stackPane);
+        b.setOnAction(ae -> {
+            pop.show(b);
+        });
+        pop.setAutoHide(true);
+
+        PopOver pop2 = new PopOver();
+        pop2.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+        pop2.setDetachedTitle("Pick Color");
+        ColorRectPane colorRectPane2 = new ColorRectPane();
+        StackPane stackPane2 = new StackPane(colorRectPane2);
+        stackPane2.setPadding(new Insets(7));
+        pop2.setContentNode(stackPane2);
+        b2.setOnAction(ae -> {
+            pop2.show(b2);
+        });
+        pop2.setAutoHide(true);
+
+        Scene scene = new Scene(new HBox(b, b2));
+        s.setTitle("Popup Control  test");
+        s.setScene(scene);
+        s.show();
+    }
+
     public void linearGradientEditorTest(Stage s) {
         AnchorPane pane = new AnchorPane();
         LinearGradientEditorDepracated linearGradientEditor = new LinearGradientEditorDepracated();
@@ -181,6 +251,16 @@ public class CSSEditors extends Application {
         VBox vbox = new VBox(pane, cycleMethodBox, focus, focusAngle, slider, radius, listView);
         VBox.setVgrow(pane, Priority.ALWAYS);
 
+        radialGradientEditor.backgroundProperty().bind(new ObjectBinding<Background>() {
+            {
+                super.bind(radialGradientEditor.gradientProperty());
+            }
+
+            @Override
+            protected Background computeValue() {
+                return new Background(new BackgroundFill(radialGradientEditor.getGradient(), CornerRadii.EMPTY, Insets.EMPTY));
+            }
+        });
         Scene scene = new Scene(vbox);
         s.setScene(scene);
         s.setTitle("RGE Test");
@@ -277,15 +357,15 @@ public class CSSEditors extends Application {
     public void backgroundLayerTest2(Stage s) {
         Region test = new Region();
         test.setStyle(
-                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(radius 50%, red, blue);"
+                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue);"
                 + "-fx-background-insets: 0,2,4;"
                 + "-fx-background-radius: 30%;"
         );
         test.setPrefSize(50, 50);
         test.setMouseTransparent(true);
         test.setFocusTraversable(false);
-        test.setScaleX(1);
-        test.setScaleY(1);
+        test.setScaleX(3);
+        test.setScaleY(3);
         //add the region to group to turn its transform into layout
         StackPane stack = new StackPane(new Group(test));
         stack.setStyle("-fx-border-color: springgreen");
@@ -304,8 +384,9 @@ public class CSSEditors extends Application {
         flow.setStyle("-fx-border-color:blue;");
         flow.prefTileHeightProperty().bind(stack.maxHeightProperty());
         flow.prefTileWidthProperty().bind(stack.maxWidthProperty());
-        flow.setHgap(5);
-        flow.setVgap(5);
+        flow.setHgap(15);
+        flow.setVgap(15);
+        flow.setPadding(new Insets(10));
         ScrollPane scrollPane = new ScrollPane(flow);
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
@@ -339,6 +420,7 @@ public class CSSEditors extends Application {
             } else if (fill.getFill() instanceof RadialGradient) {
                 RadialGradient rad = (RadialGradient) fill.getFill();
                 RadialGradientEditor editor = new RadialGradientEditor();
+                editor.setGradient(rad);
                 bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
                 bglayer.getChildren().add(editor);
             }
@@ -354,7 +436,7 @@ public class CSSEditors extends Application {
     }
 
     public void backgroundLayerTest3(Stage s) {
-        Button test = new Button();
+        Button test = new Button("HI");
 //        test.setStyle(
 //                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(radius 50%, red, blue);"
 //                + "-fx-background-insets: 0,2,4;"
@@ -429,6 +511,201 @@ public class CSSEditors extends Application {
         s.setTitle("BackgroundLayer Test");
         s.show();
 
+    }
+
+    public void backgroundLayerTestFinal(Stage s) {
+        Button test = new Button("HI");
+//        test.setStyle(
+//                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(radius 50%, red, blue);"
+//                + "-fx-background-insets: 0,2,4;"
+//                + "-fx-background-radius: 30%;"
+//        );
+//        test.setPrefSize(50, 50);
+        test.setMouseTransparent(true);
+        test.setFocusTraversable(false);
+        test.setScaleX(3);
+        test.setScaleY(3);
+        //add the region to group to turn its transform into layout
+        StackPane stack = new StackPane(new Group(test));
+        stack.setStyle("-fx-border-color: springgreen");
+        stack.maxWidthProperty().bind(test.widthProperty().multiply(test.scaleXProperty()));
+        stack.maxHeightProperty().bind(test.heightProperty().multiply(test.scaleYProperty()));
+        stack.setOnScroll(se -> {
+            if (se.isControlDown()) {
+                se.consume();
+                test.setScaleX(test.getScaleX() + se.getDeltaY() / 100);
+                test.setScaleY(test.getScaleY() + se.getDeltaY() / 100);
+            }
+        });
+        //add everything to a ScrollPane
+        TilePane flow = new TilePane(stack);
+        flow.setStyle("-fx-border-color:blue;");
+        flow.prefTileHeightProperty().bind(stack.maxHeightProperty());
+        flow.prefTileWidthProperty().bind(stack.maxWidthProperty());
+        flow.setHgap(5);
+        flow.setVgap(5);
+        ScrollPane scrollPane = new ScrollPane(flow);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+
+        BorderPane bpane = new BorderPane(scrollPane);
+        Scene scene = new Scene(bpane);
+
+        MenuBar menuBar = new MenuBar();
+        Menu file = new Menu("File");
+        MenuItem save = new MenuItem("Save");
+        save.setOnAction(new EventHandler<ActionEvent>() {
+        public void handle(ActionEvent t) {
+            final FileChooser SavefileChooser = new FileChooser();
+            
+            SavefileChooser.setTitle("Save");
+            SavefileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("CSS", "*.css")
+            );
+            
+            SavefileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+            );
+            
+            File file = SavefileChooser.showSaveDialog(s);
+                if (file != null) {
+                    try {
+                        String path = file.getPath();
+                        System.out.println(path);
+
+                        String content = getCSS(test.getBackground());
+                        FileWriter fileWriter = null;
+                        if(! (path.endsWith(".css") )) {
+                            path = path + ".css";
+                            File file1 = new File(path);
+                            file.renameTo(file1);
+                            fileWriter = new FileWriter(file1);
+                        }    
+                        else {
+                            fileWriter = new FileWriter(file);
+                        }
+                        
+                        fileWriter.write(content);
+                        fileWriter.close();
+                    } 
+                    catch (IOException ex) {
+                        System.out.println(ex.getMessage());
+                    }
+                }
+        }
+        });
+        file.getItems().add(save);
+        menuBar.getMenus().add(file);
+        bpane.setTop(menuBar);
+
+        VBox vbox = new VBox();
+        vbox.setPadding(new Insets(12));
+        vbox.setSpacing(5);
+        Button b = new Button("Button");
+        b.backgroundProperty().bind(test.backgroundProperty());
+        ComboBox box = new ComboBox(FXCollections.observableArrayList("Item 1", "Item 2"));
+        box.getSelectionModel().select(0);
+        box.backgroundProperty().bind(test.backgroundProperty());
+        ColorPicker color = new ColorPicker(Color.CADETBLUE);
+        color.backgroundProperty().bind(test.backgroundProperty());
+
+        TextArea css = new TextArea();
+        css.setWrapText(true);
+        vbox.getChildren().addAll(b, box, color, css);
+        bpane.setRight(vbox);
+        //apply css to the button
+        scrollPane.layout();
+        scrollPane.applyCss();
+        scrollPane.setPrefSize(400, 400);
+        //get all bgfills of the button
+        List<BackgroundFill> fills = test.getBackground().getFills();
+        List<BackgroundLayer> bglayers = new ArrayList<>(fills.size());
+        ChangeListener cl = (ob, ol, nw) -> {
+            List<BackgroundFill> newBgFills = bglayers.stream().map(BackgroundLayer::getBackgroundFill).collect(Collectors.toList());
+            final Background background = new Background(newBgFills, null);
+            test.setBackground(background);
+            css.setText(getCSS(background));
+        };
+        for (BackgroundFill fill : fills) {
+            //create a BackgroundLayer for each BackgroundFill
+            BackgroundLayer bglayer = new BackgroundLayer(fill);
+            bglayer.backgroundFillProperty().addListener(cl);
+            bglayers.add(bglayer);
+            flow.getChildren().add(bglayer);
+            if (fill.getFill() instanceof LinearGradient) {
+                LinearGradientEditor editor = new LinearGradientEditor();
+                editor.setGradient((LinearGradient) fill.getFill());
+                bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
+                bglayer.getChildren().add(editor);
+            } else if (fill.getFill() instanceof Color) {
+                ColorPicker picker = new ColorPicker();
+                picker.valueProperty().addListener((observable, oldValue, newValue) -> bglayer.setBackgroundPaint(newValue));
+                bglayer.getChildren().add(picker);
+            } else if (fill.getFill() instanceof RadialGradient) {
+                RadialGradient rad = (RadialGradient) fill.getFill();
+                RadialGradientEditor editor = new RadialGradientEditor();
+                editor.setGradient(rad);
+                bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
+                bglayer.getChildren().add(editor);
+            }
+        }
+
+        scene.getStylesheets().add("/csseditors/csseditors.css");
+        s.setScene(scene);
+        scrollPane.autosize();
+        s.setTitle("BackgroundLayer Test");
+        s.show();
+
+    }
+
+    public String getCSS(Background b) {
+        String cssFillvals = "";
+        String cssInsetvals = "";
+        String cssRadiivals = "";
+        List<BackgroundFill> fills = b.getFills();
+        for (int i = 0; i < fills.size(); i++) {
+            //get paint
+            Paint fill = fills.get(i).getFill();
+            cssFillvals = cssFillvals + fill.toString() + ',';
+            //get insets
+            Insets insets = fills.get(i).getInsets();
+            String bottom = Double.toString(insets.getBottom());
+            String top = Double.toString(insets.getTop());
+            String right = Double.toString(insets.getRight());
+            String left = Double.toString(insets.getLeft());
+            cssInsetvals = cssInsetvals + top + ' ' + right + ' ' + bottom + ' ' + left + ',';
+
+            //get radii
+            CornerRadii radii = fills.get(i).getRadii();
+            String bottomLeftHorizontalRadius = Double.toString(radii.getBottomLeftHorizontalRadius());
+            String bottomLeftVerticalRadius = Double.toString(radii.getBottomLeftVerticalRadius());
+            String bottomRightHorizontalRadius = Double.toString(radii.getBottomRightHorizontalRadius());
+            String bottomRightVerticalRadius = Double.toString(radii.getBottomRightVerticalRadius());
+            String topLeftHorizontalRadius = Double.toString(radii.getTopLeftHorizontalRadius());
+            String topLeftVerticalRadius = Double.toString(radii.getTopLeftVerticalRadius());
+            String topRightHorizontalRadius = Double.toString(radii.getTopRightHorizontalRadius());
+            String topRightVerticalRadius = Double.toString(radii.getTopRightVerticalRadius());
+//            if(radii.isBottomLeftHorizontalRadiusAsPercentage();
+//            radii.isBottomLeftVerticalRadiusAsPercentage(); 
+//            radii.isBottomRightHorizontalRadiusAsPercentage();
+//            radii.isBottomRightVerticalRadiusAsPercentage();
+//            radii.isTopLeftHorizontalRadiusAsPercentage();
+//            radii.isTopLeftVerticalRadiusAsPercentage();
+//            radii.isTopRightHorizontalRadiusAsPercentage(); 
+//            radii.isTopRightVerticalRadiusAsPercentage();
+            cssRadiivals = cssRadiivals + topLeftHorizontalRadius + ' ' + topLeftVerticalRadius + ' ' + topRightVerticalRadius + ' ' + topRightHorizontalRadius + ' ' + bottomRightHorizontalRadius + ' ' + bottomRightVerticalRadius + ' ' + bottomLeftVerticalRadius + ' ' + bottomLeftHorizontalRadius + ',';
+
+        }
+        cssFillvals = cssFillvals.substring(0, cssFillvals.lastIndexOf(","));
+        cssFillvals = "-fx-background-colour: " + cssFillvals + ";";
+        cssInsetvals = cssInsetvals.substring(0, cssInsetvals.lastIndexOf(","));
+        cssInsetvals = "-fx-background-insets: " + cssInsetvals + ";";
+        cssRadiivals = cssRadiivals.substring(0, cssRadiivals.lastIndexOf(","));
+        cssRadiivals = "-fx-background-radius: " + cssRadiivals + ";";
+      
+        String rules = cssFillvals + '\n' + cssInsetvals + '\n' + cssRadiivals;
+        System.out.println("rules = " + rules);
+        return rules;
     }
 
     public void compositeAppTest(Stage s) {

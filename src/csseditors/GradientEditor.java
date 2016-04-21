@@ -16,10 +16,12 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
@@ -29,6 +31,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
+import org.controlsfx.control.PopOver;
 
 /**
  * A container for layout of visual nodes representing
@@ -72,6 +75,7 @@ public abstract class GradientEditor extends Pane {
                         for (int i = c.getFrom(); i < intersectionTill; i++) {
                             Stop old = c.getRemoved().get(i - c.getFrom());
                             Stop now = stops.get(i);
+//                            System.out.println(old.toString()+"->"+now.toString());
                             //check whether the replaced Stop needs sorting
                             if (!sort) {/*Skip the check if you are going to sort anyway*/
                                 int index = i;
@@ -84,6 +88,7 @@ public abstract class GradientEditor extends Pane {
                                 }
                             }
                             stopMap.entrySet().stream().filter(e -> e.getValue() == old).findAny().ifPresent((t) -> {
+//                                System.out.println("t = " + t);
                                 t.setValue(now);
                                 t.getKey().setBackground(new Background(new BackgroundFill(now.getColor(), ROUND, Insets.EMPTY)));
                             });
@@ -92,15 +97,18 @@ public abstract class GradientEditor extends Pane {
                             //more to be added than removed. Extra StackPanes need to be created
                             final List<? extends Stop> subList = c.getAddedSubList().subList(intersectionTill, c.getTo());
                             addRange(subList);
+                            sort = true;
                         } else if (diff < 0) {
                             //more to be removed than added. Existing StackPanes need to be removed
-                            final List<? extends Stop> subList = c.getRemoved().subList(-diff+1, c.getRemovedSize());
+                            final List<? extends Stop> subList = c.getRemoved().subList(-diff + 1, c.getRemovedSize());
                             removeRange(subList);
                         }
                     } else if (c.wasAdded()) {
+//                        System.out.println("ADD");
                         addRange(c.getAddedSubList());
                         sort = true;
                     } else if (c.wasRemoved()) {
+//                        System.out.println("REMOVE");
                         removeRange(c.getRemoved());
                     }
                 }
@@ -155,6 +163,7 @@ public abstract class GradientEditor extends Pane {
     private void removeRange(List<? extends Stop> stops) {
         for (Stop s : stops) {
             StackPane p = stopMap.entrySet().stream().filter(entry -> entry.getValue() == s).findFirst().map(Map.Entry::getKey).get();
+//            System.out.println("p:"+p.toString()+" s:"+s.toString());
             stopMap.remove(p);
             getChildren().remove(p);
         }
@@ -169,6 +178,31 @@ public abstract class GradientEditor extends Pane {
 //                            final ColorPicker colorPicker = new ColorPicker(s.getColor());
 //                            colorPicker.valueProperty().addListener((ob, old, nw) -> updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw)));
 //                            stopMark.getChildren().add(colorPicker);
+            stopMark.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                PopOver pop;
+                private ColorRectPane colorRectPane;
+
+                {
+                    pop = new PopOver();
+                    pop.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+                    colorRectPane = new ColorRectPane();
+                    colorRectPane.setCustomColor(addedStop.getColor());
+                    StackPane stackPane = new StackPane(colorRectPane);
+                    stackPane.setPadding(new Insets(7));
+                    pop.setContentNode(stackPane);
+                    pop.setAutoHide(true);
+                    colorRectPane.customColorProperty().addListener((ob, ol, nw) -> {
+                        updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw));
+                    });
+                }
+
+                @Override
+                public void handle(MouseEvent event) {
+                    colorRectPane.setCustomColor(stopMap.get(stopMark).getColor());
+                    pop.show(stopMark);
+                    pop.requestFocus();
+                }
+            });
             stopMap.put(stopMark, addedStop);
             getChildren().add(stopMark);
         }

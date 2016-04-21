@@ -10,8 +10,8 @@ and open the template in the editor.
 
 .color-rect-pane {
     -fx-padding : 0;
-    -fx-pref-width:100;
-    -fx-pref-height:100; 
+    /*-fx-pref-width:100;*/
+    /*-fx-pref-height:100;*/ 
 }
 
 #color-rect-indicator {
@@ -25,16 +25,10 @@ and open the template in the editor.
 #color-bar-indicator {
     -fx-pref-width : 5;
     -fx-pref-height : 10;
-    -fx-border-color : black;
+    -fx-translate-x: -2.5;
+    /*-fx-background-color: white;*/
+    /*-fx-border-color : black;*/
 }
-
-.use-button {
-    -fx-background-color: white , whitesmoke ;
-    -fx-background-insets: 0  ,1;
-}
-.use-button:hover {
-    -fx-background-color: lightsteelblue , whitesmoke;
-}
-.use-button:pressed {
-    -fx-background-color: lightblue , white;
+#color-bar-indicator:focused{
+    -fx-border-color: black;
 }
