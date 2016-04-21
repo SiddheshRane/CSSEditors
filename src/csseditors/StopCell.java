@@ -5,14 +5,11 @@
  */
 package csseditors;
 
-import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Slider;
 import static javafx.scene.input.KeyCode.ENTER;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -41,7 +38,6 @@ public class StopCell extends ListCell<Stop> {
         cross = new StackPane();
         filler = new Region();
         hbox = new HBox(offset, color, filler, cross);
-
         offset.getStyleClass().add("offset");
         cross.getStyleClass().add("cross");
         color.getStyleClass().add("stop-color");

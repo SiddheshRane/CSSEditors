@@ -5,6 +5,8 @@
  */
 package csseditors;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -22,7 +24,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -30,7 +31,6 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Line;
-import javafx.scene.text.Text;
 
 /**
  * A GUI component for editing {@link LinearGradient} paint.
@@ -50,11 +50,7 @@ public class LinearGradientEditor extends GradientEditor {
     //Line passes through all stops to show the direction of gradient
     Line line;
     //Cycle Method comboBox
-    ComboBox<CycleMethod> cycleMethodBox;
     private boolean showingEndPoints = false;
-    /* **************** *
-    *    PROPERTIES    *
-    * **************** */
     private final ObjectProperty<LinearGradient> gradient = new SimpleObjectProperty<>();
     EventHandler<MouseEvent> onClick = new EventHandler<MouseEvent>() {
         @Override
@@ -127,11 +123,6 @@ public class LinearGradientEditor extends GradientEditor {
         start = new Region();
         end = new Region();
         line = new Line();
-        cycleMethodBox = new ComboBox<>(FXCollections.observableArrayList(CycleMethod.values()));
-
-        cycleMethodBox.valueProperty().bindBidirectional(cycleMethodProperty());
-        cycleMethodBox.setVisibleRowCount(3);
-        cycleMethodBox.getStyleClass().add("cycle-method");
 
         //css styles
         getStylesheets().add("/csseditors/gradients.css");
@@ -142,11 +133,7 @@ public class LinearGradientEditor extends GradientEditor {
         end.getStyleClass().add("end");
         line.getStyleClass().add("line");
 
-        Text t = new Text("CycleMethod");
-        HBox h = new HBox(t, cycleMethodBox);
-        h.getStyleClass().add("cycle-method-hbox");
-        t.getStyleClass().add("cycle-method-label");
-        getChildren().add(h);
+//        getChildren().add(h);
         getChildren().addAll(line, start, end);
         addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
         addEventHandler(MouseEvent.MOUSE_DRAGGED, onDrag);
@@ -154,7 +141,41 @@ public class LinearGradientEditor extends GradientEditor {
         addStop(new Stop(0, Color.ALICEBLUE));
         addStop(new Stop(.3, Color.SKYBLUE));
         addStop(new Stop(0.8, Color.STEELBLUE));
+        InvalidationListener gradientBinder = new InvalidationListener() {
+            boolean updating;
 
+            @Override
+            public void invalidated(Observable observable) {
+                if (updating) {
+                    return;
+                }
+                updating = true;
+                if (observable == gradient) {
+                    LinearGradient grad = getGradient();
+                    getStops().setAll(grad.getStops());
+                    setCycleMethod(grad.getCycleMethod());
+                    setProportional(grad.isProportional());
+                } else if (observable == getStops()
+                        || (observable == cycleMethodProperty())
+                        || (observable == proportionalProperty())
+                        || (observable == startX)
+                        || (observable == startY)
+                        || (observable == endX)
+                        || (observable == endX)) {
+                    setGradient(new LinearGradient(getStartX(), getStartY(), getEndX(), getEndY(), isProportional(), getCycleMethod(), getStops()));
+                }
+                requestLayout();
+                updating = false;
+            }
+        };
+        gradient.addListener(gradientBinder);
+        getStops().addListener(gradientBinder);
+        proportionalProperty().addListener(gradientBinder);
+        cycleMethodProperty().addListener(gradientBinder);
+        startX.addListener(gradientBinder);
+        startY.addListener(gradientBinder);
+        endX.addListener(gradientBinder);
+        endY.addListener(gradientBinder);
     }
 
     public double getStartX() {
@@ -247,8 +268,6 @@ public class LinearGradientEditor extends GradientEditor {
         line.setEndX(stopLayoutX(1));
         line.setEndY(stopLayoutY(1));
         layoutStops();
-        //TODO: Dont call update gradient in layoutChildren. It recomputes the gradient unnecessarily
-        updateGradient();
     }
 
     /**
@@ -298,13 +317,6 @@ public class LinearGradientEditor extends GradientEditor {
             offset = 0;
         }
         return offset;
-    }
-
-    @Override
-    public void updateGradient() {
-        LinearGradient lg = new LinearGradient(getStartX(), getStartY(), getEndX(), getEndY(), isProportional(), getCycleMethod(), getStops());
-        gradient.set(lg);
-//        setBackground(new Background(new BackgroundFill(lg, CornerRadii.EMPTY, getPadding())));
     }
 
     private void enableEndPoints(boolean activate) {

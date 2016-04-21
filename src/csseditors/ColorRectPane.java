@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package csseditors;
 
 import javafx.beans.binding.Bindings;
@@ -14,12 +13,15 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
-import javafx.scene.control.Button;
+import javafx.geometry.Pos;
+import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Reflection;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -41,14 +43,14 @@ import javafx.scene.paint.Stop;
 class ColorRectPane extends VBox {
 
     private Pane colorRect;
-    private Pane colorBar;
-    private Pane colorRectOverlayOne;
-    private Pane colorRectOverlayTwo;
+    private final Pane colorBar;
+    private final Pane colorRectOverlayOne;
+    private final Pane colorRectOverlayTwo;
     private Region colorRectIndicator;
-    private Region colorBarIndicator;
+    private final Region colorBarIndicator;
 
     private boolean changeIsLocal = false;
-    private DoubleProperty hue = new SimpleDoubleProperty(-1) {
+    private DoubleProperty hue = new SimpleDoubleProperty(0) {
         @Override
         protected void invalidated() {
             if (!changeIsLocal) {
@@ -58,7 +60,7 @@ class ColorRectPane extends VBox {
             }
         }
     };
-    private DoubleProperty sat = new SimpleDoubleProperty(-1) {
+    private DoubleProperty sat = new SimpleDoubleProperty(0) {
         @Override
         protected void invalidated() {
             if (!changeIsLocal) {
@@ -68,7 +70,7 @@ class ColorRectPane extends VBox {
             }
         }
     };
-    private DoubleProperty bright = new SimpleDoubleProperty(-1) {
+    private DoubleProperty bright = new SimpleDoubleProperty(0) {
         @Override
         protected void invalidated() {
             if (!changeIsLocal) {
@@ -78,7 +80,7 @@ class ColorRectPane extends VBox {
             }
         }
     };
-    private IntegerProperty red = new SimpleIntegerProperty(-1) {
+    private IntegerProperty red = new SimpleIntegerProperty(0) {
         @Override
         protected void invalidated() {
             if (!changeIsLocal) {
@@ -89,7 +91,7 @@ class ColorRectPane extends VBox {
         }
     };
 
-    private IntegerProperty green = new SimpleIntegerProperty(-1) {
+    private IntegerProperty green = new SimpleIntegerProperty(0) {
         @Override
         protected void invalidated() {
             if (!changeIsLocal) {
@@ -100,7 +102,7 @@ class ColorRectPane extends VBox {
         }
     };
 
-    private IntegerProperty blue = new SimpleIntegerProperty(-1) {
+    private IntegerProperty blue = new SimpleIntegerProperty(0) {
         @Override
         protected void invalidated() {
             if (!changeIsLocal) {
@@ -126,7 +128,6 @@ class ColorRectPane extends VBox {
         }
     };
 
-    Button b = new Button("Button");
     private void updateRGBColor() {
         Color newColor = Color.rgb(red.get(), green.get(), blue.get(), clamp(alpha.get() / 100));
         hue.set(newColor.getHue());
@@ -137,7 +138,7 @@ class ColorRectPane extends VBox {
 
     private void updateHSBColor() {
         Color newColor = Color.hsb(hue.get(), clamp(sat.get() / 100),
-                                   clamp(bright.get() / 100), clamp(alpha.get() / 100));
+                clamp(bright.get() / 100), clamp(alpha.get() / 100));
         red.set(doubleToInt(newColor.getRed()));
         green.set(doubleToInt(newColor.getGreen()));
         blue.set(doubleToInt(newColor.getBlue()));
@@ -162,12 +163,8 @@ class ColorRectPane extends VBox {
         getStylesheets().add("/csseditors/colorRectPane.css");
         getStyleClass().add("color-rect-pane");
 
-        customColorProperty().addListener(new ChangeListener<Color>() {
-
-            @Override
-            public void changed(ObservableValue<? extends Color> ov, Color t, Color t1) {
-                colorChanged();
-            }
+        customColorProperty().addListener((ObservableValue<? extends Color> ov, Color t, Color t1) -> {
+            colorChanged();
         });
 
         colorRectIndicator = new Region();
@@ -179,7 +176,7 @@ class ColorRectPane extends VBox {
         final Pane colorRectOpacityContainer = new StackPane();
 
         colorRect = new StackPane() {
-                // This is an implementation of square control that chooses its
+            // This is an implementation of square control that chooses its
             // size to fill the available height
 
             @Override
@@ -191,17 +188,11 @@ class ColorRectPane extends VBox {
             protected double computePrefHeight(double width) {
                 return width;
             }
-
-            @Override
-            protected double computeMaxHeight(double width) {
-                return width;
-            }
-
         };
         colorRect.getStyleClass().addAll("color-rect", "transparent-pattern");
 
         Pane colorRectHue = new Pane();
-        colorRectHue.backgroundProperty().bind(new ObjectBinding<Background>() {
+        final ObjectBinding<Background> hueBackground = new ObjectBinding<Background>() {
 
             {
                 bind(hue);
@@ -213,14 +204,14 @@ class ColorRectPane extends VBox {
                         Color.hsb(hue.getValue(), 1.0, 1.0),
                         CornerRadii.EMPTY, Insets.EMPTY));
             }
-        });
-
+        };
+        colorRectHue.backgroundProperty().bind(hueBackground);
         colorRectOverlayOne = new Pane();
         colorRectOverlayOne.getStyleClass().add("color-rect");
         colorRectOverlayOne.setBackground(new Background(new BackgroundFill(
                 new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
-                                   new Stop(0, Color.rgb(255, 255, 255, 1)),
-                                   new Stop(1, Color.rgb(255, 255, 255, 0))),
+                        new Stop(0, Color.rgb(255, 255, 255, 1)),
+                        new Stop(1, Color.rgb(255, 255, 255, 0))),
                 CornerRadii.EMPTY, Insets.EMPTY)));
 
         EventHandler<MouseEvent> rectMouseHandler = new EventHandler<MouseEvent>() {
@@ -237,7 +228,7 @@ class ColorRectPane extends VBox {
         colorRectOverlayTwo.getStyleClass().addAll("color-rect");
         colorRectOverlayTwo.setBackground(new Background(new BackgroundFill(
                 new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
-                                   new Stop(0, Color.rgb(0, 0, 0, 0)), new Stop(1, Color.rgb(0, 0, 0, 1))),
+                        new Stop(0, Color.rgb(0, 0, 0, 0)), new Stop(1, Color.rgb(0, 0, 0, 1))),
                 CornerRadii.EMPTY, Insets.EMPTY)));
         colorRectOverlayTwo.setOnMouseDragged(rectMouseHandler);
         colorRectOverlayTwo.setOnMousePressed(rectMouseHandler);
@@ -249,7 +240,7 @@ class ColorRectPane extends VBox {
         colorBar = new Pane();
         colorBar.getStyleClass().add("color-bar");
         colorBar.setBackground(new Background(new BackgroundFill(createHueGradient(),
-                                                                 CornerRadii.EMPTY, Insets.EMPTY)));
+                CornerRadii.EMPTY, Insets.EMPTY)));
 
         colorBar.setPrefHeight(10);
         colorBar.setMinHeight(10);
@@ -261,6 +252,7 @@ class ColorRectPane extends VBox {
         colorRectIndicator.layoutXProperty().bind(sat.divide(100).multiply(colorRect.widthProperty()));
         colorRectIndicator.layoutYProperty().bind(Bindings.subtract(1, bright.divide(100)).multiply(colorRect.heightProperty()));
         colorBarIndicator.layoutXProperty().bind(hue.divide(360).multiply(colorBar.widthProperty()));
+
         colorRectOpacityContainer.opacityProperty().bind(alpha.divide(100));
 
         EventHandler<MouseEvent> barMouseHandler = new EventHandler<MouseEvent>() {
@@ -268,19 +260,47 @@ class ColorRectPane extends VBox {
             public void handle(MouseEvent event) {
                 final double x = event.getX();
                 hue.set(clamp(x / colorRect.getWidth()) * 360);
+                event.consume();
             }
         };
 
         colorBar.setOnMouseDragged(barMouseHandler);
         colorBar.setOnMousePressed(barMouseHandler);
-
         colorBar.getChildren().setAll(colorBarIndicator);
+        
         colorRectOpacityContainer.getChildren().setAll(colorRectHue, colorRectOverlayOne, colorRectOverlayTwo);
         colorRect.getChildren().setAll(colorRectOpacityContainer, colorRectBlackBorder, colorRectIndicator);
         VBox.setVgrow(colorRect, Priority.SOMETIMES);
-        getChildren().addAll(colorRect, colorBar , b);
-        
-        b.getStyleClass().add("use-button");
+        setSpacing(7);
+        setAlignment(Pos.CENTER);
+        DropShadow dropShadow = new DropShadow();
+        dropShadow.colorProperty().bind(customColorProperty);
+        colorRect.setEffect(dropShadow);
+        colorRect.setPrefSize(150, 150);
+        colorBar.setEffect(new Reflection());
+        colorBarIndicator.setFocusTraversable(true);
+        colorBarIndicator.setOnKeyPressed(ke -> {
+            double change = 0;
+            switch (ke.getCode()) {
+                case RIGHT:
+                case KP_RIGHT:
+                    change = 5;
+                    break;
+                case LEFT:
+                case KP_LEFT:
+                    change = -5;
+                    break;
+            }
+            if (change != 0) {
+                double newHue = hue.get() + change;
+                newHue = newHue > 360 ? 0 : newHue < 0 ? 360 : newHue;
+                hue.set(newHue);
+            }
+        });
+        Slider alphaSlider = new Slider(0, 100, 100);
+        alphaSlider.setTooltip(new Tooltip("Color Opacity"));
+        alphaSlider.valueProperty().bindBidirectional(alpha);
+        getChildren().addAll(colorRect, colorBar, alphaSlider);
     }
 
     @Override
@@ -293,10 +313,12 @@ class ColorRectPane extends VBox {
         // to maintain square size
         double size = Math.min(colorRect.getWidth(), colorRect.getHeight());
         colorRect.resize(size, size);
+        colorRect.setLayoutX((getWidth() - size) / 2);
+        colorBar.setLayoutX((getWidth() - size) / 2);
         colorBar.resize(size, colorBar.getHeight());
     }
 
-    private ObjectProperty<Color> customColorProperty = new SimpleObjectProperty<>(Color.BLUE);
+    private ObjectProperty<Color> customColorProperty = new SimpleObjectProperty<>(Color.BLACK);
 
     ObjectProperty<Color> customColorProperty() {
         return customColorProperty;
@@ -310,7 +332,6 @@ class ColorRectPane extends VBox {
         return customColorProperty.get();
     }
 
-    //transfered
     static double clamp(double value) {
         return value < 0 ? 0 : value > 1 ? 1 : value;
     }
@@ -330,4 +351,3 @@ class ColorRectPane extends VBox {
         return (int) (value * 255 + 0.5); // Adding 0.5 for rounding only
     }
 }
-

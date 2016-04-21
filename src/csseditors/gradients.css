@@ -31,8 +31,6 @@ and open the template in the editor.
     -fx-border-color:black;
     -fx-border-radius: 10;
     -fx-border-style: solid outside;
-    -fx-background-color: #e6b4b4;
-    -fx-background-radius: 10px;
     -fx-pref-width:10;
     -fx-pref-height:10;
     -fx-snap-to-pixel:false;
