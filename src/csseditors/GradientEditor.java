@@ -56,8 +56,10 @@ public abstract class GradientEditor extends VBox {
      */
     SortedList<Stop> sortedStops;
 
-    /*
-     * UI COMPONENTS
+    /*_______________
+     |               |
+     | UI COMPONENTS |
+     |_______________|
      */
     //A ListView showing the list of stops in ascending order of their offset
     ListView<Stop> stopList;
@@ -151,7 +153,6 @@ public abstract class GradientEditor extends VBox {
         addEventFilter(MouseEvent.MOUSE_PRESSED, clickFilter);
         addEventFilter(MouseEvent.MOUSE_DRAGGED, clickFilter);
         addEventFilter(MouseEvent.MOUSE_CLICKED, clickFilter);
-
     }
 
     public CycleMethod getCycleMethod() {
