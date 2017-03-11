@@ -1,12 +1,19 @@
 package csseditors;
 
 import drag.Draggable;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.ColorPicker;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -26,7 +33,7 @@ import javafx.scene.shape.ArcType;
 public class BackgroundLayer extends StackPane {
 
     private static final String CORNER_RADII_ARC = "cornerRadiiArc";
-    private static final EventHandler<MouseEvent> MOUSE_HANDLER  = new EventHandler<MouseEvent>() {
+    private static final EventHandler<MouseEvent> MOUSE_HANDLER = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
             //PENDING: Transfer InsetsDraggable code here
@@ -46,6 +53,7 @@ public class BackgroundLayer extends StackPane {
     Arc arcTR;
     Arc arcBR;
     Arc arcBL;
+
     private boolean updating;
 
     public BackgroundLayer() {
@@ -225,12 +233,9 @@ public class BackgroundLayer extends StackPane {
     }
 
     /**
-     * Checks if the arcs are overlapping and resizes them to fit without
-     * overlapping. Call this when the
-     */
-    /**
      * Updates the arc sizes whenever the cornerRadii or the layout bounds of
-     * the container change.
+     * the container change. Checks if the arcs are overlapping and resizes them
+     * to fit without overlapping.
      */
     private void updateArcs() {
         Insets insets = backgroundFill.get().getInsets();

@@ -104,4 +104,13 @@ and open the template in the editor.
 }
 
 
+/*gnm project*/
+/*.button ,.cssNamed {
+    -fx-background-color: cornflowerblue,
+        linear-gradient(to bottom,steelblue,springgreen),
+        radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue);
+    -fx-background-insets: 0,2,4;
+    -fx-background-radius: 30%;
+}*/
+
 

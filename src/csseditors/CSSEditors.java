@@ -8,6 +8,7 @@ package csseditors;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import javafx.application.Application;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ChangeListener;
@@ -31,16 +32,19 @@ import org.controlsfx.control.PopOver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javafx.animation.FadeTransition;
-import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Point3D;
+import javafx.scene.Node;
+import javafx.scene.ParallelCamera;
+import javafx.scene.PerspectiveCamera;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
-import javafx.stage.WindowEvent;
-import javafx.util.Duration;
 
 /**
  *
@@ -53,21 +57,23 @@ public class CSSEditors extends Application {
         /*
          uncomment any one to play its demo
          */
-//        backgroundFillEditorTest(primaryStage);
+        backgroundFillEditorTest(primaryStage);
 //        regionPropertiesTest(primaryStage);
 //        colorRectPaneTest(primaryStage);
 //        colorRectPaneTest2(primaryStage);
 //        popupControlTest(primaryStage);
 //        popoverControlTest(primaryStage);
-//        linearGradientEditorTest(primaryStage);
+//        oldLinearGradientEditorTest(primaryStage);
 //        stopCellTest(primaryStage);
 //        LinearGradientEditorTest(primaryStage);
-        RadialGradientEditorTest(primaryStage);
+//        RadialGradientEditorTest(primaryStage);
 //        backgroundLayerTest(primaryStage);
 //        backgroundLayerTest2(primaryStage);
 //        backgroundLayerTestFinal(primaryStage);
 //        backgroundLayerTest3(primaryStage);
 //        compositeAppTest(primaryStage);
+//        fxmlLoaderTest(primaryStage);
+//        scene3dTest(primaryStage);
     }
 
     public void backgroundFillEditorTest(Stage s) {
@@ -192,7 +198,7 @@ public class CSSEditors extends Application {
         s.show();
     }
 
-    public void linearGradientEditorTest(Stage s) {
+    public void oldLinearGradientEditorTest(Stage s) {
         AnchorPane pane = new AnchorPane();
         LinearGradientEditorDepracated linearGradientEditor = new LinearGradientEditorDepracated();
         pane.getChildren().add(linearGradientEditor);
@@ -215,6 +221,17 @@ public class CSSEditors extends Application {
         AnchorPane.setRightAnchor(linearGradientEditor, 25d);
         AnchorPane.setTopAnchor(linearGradientEditor, 25d);
         AnchorPane.setBottomAnchor(linearGradientEditor, 25d);
+
+        linearGradientEditor.backgroundProperty().bind(new ObjectBinding<Background>() {
+            {
+                super.bind(linearGradientEditor.gradientProperty());
+            }
+
+            @Override
+            protected Background computeValue() {
+                return new Background(new BackgroundFill(linearGradientEditor.getGradient(), CornerRadii.EMPTY, Insets.EMPTY));
+            }
+        });
 
         Scene scene = new Scene(pane);
         s.setScene(scene);
@@ -251,6 +268,7 @@ public class CSSEditors extends Application {
         VBox vbox = new VBox(pane, cycleMethodBox, focus, focusAngle, slider, radius, listView);
         VBox.setVgrow(pane, Priority.ALWAYS);
 
+        radialGradientEditor.setGradient(RadialGradient.valueOf("radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue)"));
         radialGradientEditor.backgroundProperty().bind(new ObjectBinding<Background>() {
             {
                 super.bind(radialGradientEditor.gradientProperty());
@@ -272,8 +290,8 @@ public class CSSEditors extends Application {
         ListView<Stop> stopsList = new ListView<>();
         stopsList.setEditable(true);
         ObservableList<Stop> stops = FXCollections.observableArrayList(new Stop(0, Color.AQUA),
-                new Stop(0.5, Color.ALICEBLUE), new Stop(0.6, Color.CHARTREUSE),
-                new Stop(0.7, Color.BLANCHEDALMOND));
+                                                                       new Stop(0.5, Color.ALICEBLUE), new Stop(0.6, Color.CHARTREUSE),
+                                                                       new Stop(0.7, Color.BLANCHEDALMOND));
 
         stopsList.setItems(stops);
         stopsList.setCellFactory((ListView<Stop> param) -> new StopCell());
@@ -354,14 +372,24 @@ public class CSSEditors extends Application {
         s.show();
     }
 
+    String css = "-fx-background-color: cornflowerblue,"
+            + "linear-gradient(to bottom,#111, #ccc),"
+            + "radial-gradient(center 50% 50%,radius 50%, #555555, #aaaaaa);"
+            + "-fx-background-insets: 0,2,4;"
+            + "-fx-background-radius: 30%;";
+
+    final String cssNamed = "-fx-background-color: cornflowerblue,"
+            + "linear-gradient(to bottom,steelblue,springgreen),"
+            + "radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue);"
+            + "-fx-background-insets: 0,2,4;"
+            + "-fx-background-radius: 30%;";
+
     public void backgroundLayerTest2(Stage s) {
-        Region test = new Region();
-        test.setStyle(
-                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue);"
-                + "-fx-background-insets: 0,2,4;"
-                + "-fx-background-radius: 30%;"
-        );
-        test.setPrefSize(50, 50);
+        Button test = new Button("Button");
+//        test.setStyle(cssNamed);
+//        test.setStyle(css);
+        test.getStyleClass().add(".cssNamed");
+//        test.setPrefSize(20, 20);
         test.setMouseTransparent(true);
         test.setFocusTraversable(false);
         test.setScaleX(3);
@@ -374,12 +402,10 @@ public class CSSEditors extends Application {
         stack.setOnScroll(se -> {
             if (se.isControlDown()) {
                 se.consume();
-                System.out.println("delta X,Y = " + se.getDeltaX() + "," + se.getDeltaY());
                 test.setScaleX(test.getScaleX() + se.getDeltaY() / 100);
                 test.setScaleY(test.getScaleY() + se.getDeltaY() / 100);
             }
         });
-        //add everything to a ScrollPane
         TilePane flow = new TilePane(stack);
         flow.setStyle("-fx-border-color:blue;");
         flow.prefTileHeightProperty().bind(stack.maxHeightProperty());
@@ -387,12 +413,18 @@ public class CSSEditors extends Application {
         flow.setHgap(15);
         flow.setVgap(15);
         flow.setPadding(new Insets(10));
+        //add everything to a ScrollPane
         ScrollPane scrollPane = new ScrollPane(flow);
-        scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
-        Scene scene = new Scene(scrollPane);
+        BorderPane borderPane = new BorderPane(scrollPane);
+        ToggleButton insets = new ToggleButton("Insets");
+        ToggleButton lg = new ToggleButton("Linear Gradient");
+        ToggleButton rg = new ToggleButton("Overview");
+
+        ToolBar tools = new ToolBar(insets, lg, rg);
+        borderPane.setTop(tools);
+        Scene scene = new Scene(borderPane);
         //apply css to the button
-        scrollPane.layout();
         scrollPane.applyCss();
         scrollPane.setPrefSize(400, 400);
         //get all bgfills of the button
@@ -410,9 +442,9 @@ public class CSSEditors extends Application {
             flow.getChildren().add(bglayer);
             if (fill.getFill() instanceof LinearGradient) {
                 LinearGradientEditor editor = new LinearGradientEditor();
+                bglayer.getChildren().add(editor);
                 editor.setGradient((LinearGradient) fill.getFill());
                 bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
-                bglayer.getChildren().add(editor);
             } else if (fill.getFill() instanceof Color) {
                 ColorPicker picker = new ColorPicker();
                 picker.valueProperty().addListener((observable, oldValue, newValue) -> bglayer.setBackgroundPaint(newValue));
@@ -424,8 +456,17 @@ public class CSSEditors extends Application {
                 bglayer.backgroundPaintProperty().bind(editor.gradientProperty());
                 bglayer.getChildren().add(editor);
             }
-
         }
+//        rg.setOnAction(ae -> {
+//            StackPane stacker = new StackPane();
+//            if (rg.isSelected()) {
+//                stacker.getChildren().addAll(bglayers);
+//                flow.getChildren().add(stacker);
+//            }else {
+//                flow.getChildren().remove(stacker);
+//                flow.getChildren().addAll(bglayers);
+//            }
+//        });
 
         scene.getStylesheets().add("/csseditors/csseditors.css");
         s.setScene(scene);
@@ -515,6 +556,7 @@ public class CSSEditors extends Application {
 
     public void backgroundLayerTestFinal(Stage s) {
         Button test = new Button("HI");
+        test.getStyleClass().add(".cssNamed");
 //        test.setStyle(
 //                "-fx-background-color: cornflowerblue,linear-gradient(to bottom,steelblue,springgreen),radial-gradient(radius 50%, red, blue);"
 //                + "-fx-background-insets: 0,2,4;"
@@ -555,44 +597,42 @@ public class CSSEditors extends Application {
         Menu file = new Menu("File");
         MenuItem save = new MenuItem("Save");
         save.setOnAction(new EventHandler<ActionEvent>() {
-        public void handle(ActionEvent t) {
-            final FileChooser SavefileChooser = new FileChooser();
-            
-            SavefileChooser.setTitle("Save");
-            SavefileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("CSS", "*.css")
-            );
-            
-            SavefileChooser.setInitialDirectory(
-                new File(System.getProperty("user.home"))
-            );
-            
-            File file = SavefileChooser.showSaveDialog(s);
+            public void handle(ActionEvent t) {
+                final FileChooser SavefileChooser = new FileChooser();
+
+                SavefileChooser.setTitle("Save");
+                SavefileChooser.getExtensionFilters().addAll(
+                        new FileChooser.ExtensionFilter("CSS", "*.css")
+                );
+
+                SavefileChooser.setInitialDirectory(
+                        new File(System.getProperty("user.home"))
+                );
+
+                File file = SavefileChooser.showSaveDialog(s);
                 if (file != null) {
                     try {
                         String path = file.getPath();
                         System.out.println(path);
 
-                        String content = getCSS(test.getBackground());
+                        String content = ".theme{\n" + getCSS(test.getBackground()) + "\n}";
                         FileWriter fileWriter = null;
-                        if(! (path.endsWith(".css") )) {
+                        if (!(path.endsWith(".css"))) {
                             path = path + ".css";
                             File file1 = new File(path);
                             file.renameTo(file1);
                             fileWriter = new FileWriter(file1);
-                        }    
-                        else {
+                        } else {
                             fileWriter = new FileWriter(file);
                         }
-                        
+
                         fileWriter.write(content);
                         fileWriter.close();
-                    } 
-                    catch (IOException ex) {
+                    } catch (IOException ex) {
                         System.out.println(ex.getMessage());
                     }
                 }
-        }
+            }
         });
         file.getItems().add(save);
         menuBar.getMenus().add(file);
@@ -626,6 +666,7 @@ public class CSSEditors extends Application {
             test.setBackground(background);
             css.setText(getCSS(background));
         };
+
         for (BackgroundFill fill : fills) {
             //create a BackgroundLayer for each BackgroundFill
             BackgroundLayer bglayer = new BackgroundLayer(fill);
@@ -666,14 +707,14 @@ public class CSSEditors extends Application {
         for (int i = 0; i < fills.size(); i++) {
             //get paint
             Paint fill = fills.get(i).getFill();
-            cssFillvals = cssFillvals + fill.toString() + ',';
+            cssFillvals = cssFillvals + "\n\t" + fill.toString() + ",";
             //get insets
             Insets insets = fills.get(i).getInsets();
             String bottom = Double.toString(insets.getBottom());
             String top = Double.toString(insets.getTop());
             String right = Double.toString(insets.getRight());
             String left = Double.toString(insets.getLeft());
-            cssInsetvals = cssInsetvals + top + ' ' + right + ' ' + bottom + ' ' + left + ',';
+            cssInsetvals = cssInsetvals + "\n\t" + top + ' ' + right + ' ' + bottom + ' ' + left + ",";
 
             //get radii
             CornerRadii radii = fills.get(i).getRadii();
@@ -693,21 +734,22 @@ public class CSSEditors extends Application {
 //            radii.isTopLeftVerticalRadiusAsPercentage();
 //            radii.isTopRightHorizontalRadiusAsPercentage(); 
 //            radii.isTopRightVerticalRadiusAsPercentage();
-            cssRadiivals = cssRadiivals + topLeftHorizontalRadius + ' ' + topLeftVerticalRadius + ' ' + topRightVerticalRadius + ' ' + topRightHorizontalRadius + ' ' + bottomRightHorizontalRadius + ' ' + bottomRightVerticalRadius + ' ' + bottomLeftVerticalRadius + ' ' + bottomLeftHorizontalRadius + ',';
+            cssRadiivals = cssRadiivals + "\n\t" + topLeftHorizontalRadius + ' ' + topLeftVerticalRadius + ' ' + topRightVerticalRadius + ' ' + topRightHorizontalRadius + ' ' + bottomRightHorizontalRadius + ' ' + bottomRightVerticalRadius + ' ' + bottomLeftVerticalRadius + ' ' + bottomLeftHorizontalRadius + ',';
 
         }
         cssFillvals = cssFillvals.substring(0, cssFillvals.lastIndexOf(","));
-        cssFillvals = "-fx-background-colour: " + cssFillvals + ";";
+        cssFillvals = "-fx-background-color: " + cssFillvals + ";";
         cssInsetvals = cssInsetvals.substring(0, cssInsetvals.lastIndexOf(","));
         cssInsetvals = "-fx-background-insets: " + cssInsetvals + ";";
         cssRadiivals = cssRadiivals.substring(0, cssRadiivals.lastIndexOf(","));
         cssRadiivals = "-fx-background-radius: " + cssRadiivals + ";";
-      
+
         String rules = cssFillvals + '\n' + cssInsetvals + '\n' + cssRadiivals;
-        System.out.println("rules = " + rules);
+        rules = rules.replaceAll("0x", "#");
         return rules;
     }
 
+    
     public void compositeAppTest(Stage s) {
         Rectangle rec = new Rectangle(200, 100);
         RadialGradientEditor editor = new RadialGradientEditor();
@@ -729,6 +771,80 @@ public class CSSEditors extends Application {
         Scene scene = new Scene(hbox);
         s.setScene(scene);
         s.setTitle("Composite Application Test");
+        s.show();
+    }
+
+    public void fxmlLoaderTest(Stage s) {
+
+        Label empty = new Label("No Content");
+        StackPane pane = new StackPane(empty);
+        empty.setStyle("-fx-font-size:50px; -fx-text-fill: gray;");
+        ScrollPane scrollPane = new ScrollPane(pane);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        Button open = new Button("Open");
+        ToolBar toolBar = new ToolBar(open);
+        BorderPane borderPane = new BorderPane(scrollPane);
+        borderPane.setTop(toolBar);
+
+        open.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent ae) {
+                final FileChooser openChooser = new FileChooser();
+
+                openChooser.setTitle("Choose an FXML file");
+                openChooser.getExtensionFilters().addAll(
+                        new FileChooser.ExtensionFilter("FXML", "*.fxml")
+                );
+
+                openChooser.setInitialDirectory(
+                        new File(System.getProperty("user.home"))
+                );
+
+                File file = openChooser.showOpenDialog(s);
+                if (file != null) {
+                    String path = file.getPath();
+                    System.out.println(path);
+                    try {
+                        Node content = (Node) FXMLLoader.load(file.toURI().toURL());
+                        scrollPane.setContent(content);
+                    } catch (MalformedURLException ex) {
+                        Logger.getLogger(CSSEditors.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(CSSEditors.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        });
+
+        Scene scene = new Scene(borderPane, 500, 500);
+        s.setScene(scene);
+        s.setTitle("FXML Loader Test");
+        s.show();
+    }
+
+    public void scene3dTest(Stage s) {
+        StackPane red = new StackPane();
+        red.setStyle("-fx-background-color:tomato;");
+        red.setTranslateZ(100);
+//        red.setTranslateX(100);
+        red.setRotationAxis(new Point3D(0, 1, 0));
+        red.setRotate(-45);
+        red.setPrefSize(100, 100);
+        StackPane green = new StackPane();
+        green.setStyle("-fx-background-color:springgreen;");
+        green.setTranslateZ(-100);
+        green.setRotationAxis(new Point3D(0, 1, 0));
+        green.setRotate(-45);
+        green.setPrefSize(100, 100);
+        AnchorPane con = new AnchorPane(red, green);
+        con.setStyle("-fx-border-color:cornflowerblue;");
+        PerspectiveCamera camera = new PerspectiveCamera();
+        ParallelCamera parallelCamera = new ParallelCamera();
+        Scene scene = new Scene(con, 400, 400, true);
+        scene.setCamera(camera);
+        s.setScene(scene);
+        s.setTitle("Scene 3D test");
         s.show();
     }
 

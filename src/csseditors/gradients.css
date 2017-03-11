@@ -78,7 +78,7 @@ and open the template in the editor.
     -fx-spacing : 5;
 }
 
-.center {
+.center ,.add {
     -fx-pref-width : 6;
     -fx-pref-height:6;
     -fx-background-color:black;
@@ -90,6 +90,8 @@ and open the template in the editor.
     -fx-pref-height:10;
     -fx-background-color:mediumspringgreen;
     -fx-background-radius : 10;
+    -fx-border-color: black;
+    -fx-border-radius: 10;
 }
 .radius {
     -fx-pref-width : 10;
@@ -99,14 +101,12 @@ and open the template in the editor.
     -fx-background-color:tomato;
     -fx-background-radius : 10;
 }
-.add {
+.add_ {
     -fx-pref-width : 10;
     -fx-pref-height:10;
-    -fx-border-color :#ee39e2;
-    -fx-border-radius: 0;
+    -fx-border-color :#010101;
     -fx-shape:"M0,0 h5 v5 h2 v-5 h5 v-2 h-5 v-5 h-2 v5 h-5 z"
 }
-
 .cross-mark{
     -fx-shape : "M0 0 L 12 12 M 12 0 L 0 12";
     -fx-border-color : whitesmoke;
@@ -173,4 +173,13 @@ and open the template in the editor.
     -fx-stroke-width: 0px;
     -fx-arc-width : 10;
     -fx-arc-height : 10;
+}
+
+/*gnm project*/
+.cssNamed {
+    -fx-background-color: cornflowerblue,
+        linear-gradient(to bottom,steelblue,springgreen),
+        radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue);
+    -fx-background-insets: 0,2,4;
+    -fx-background-radius: 30%;
 }

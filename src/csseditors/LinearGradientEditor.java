@@ -44,6 +44,7 @@ public class LinearGradientEditor extends GradientEditor {
     private final DoubleProperty startY = new SimpleDoubleProperty(0);
     private final DoubleProperty endX = new SimpleDoubleProperty(1);
     private final DoubleProperty endY = new SimpleDoubleProperty(1);
+    private final ObjectProperty<LinearGradient> gradient = new SimpleObjectProperty<>();
     //control for setting startX , startY , endX , endY in LinearGradient
     Region start;
     Region end;
@@ -51,7 +52,6 @@ public class LinearGradientEditor extends GradientEditor {
     Line line;
     //Cycle Method comboBox
     private boolean showingEndPoints = false;
-    private final ObjectProperty<LinearGradient> gradient = new SimpleObjectProperty<>();
     EventHandler<MouseEvent> onClick = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
@@ -138,14 +138,12 @@ public class LinearGradientEditor extends GradientEditor {
         addEventHandler(MouseEvent.MOUSE_CLICKED, onClick);
         addEventHandler(MouseEvent.MOUSE_DRAGGED, onDrag);
 
-        addStop(new Stop(0, Color.ALICEBLUE));
-        addStop(new Stop(.3, Color.SKYBLUE));
-        addStop(new Stop(0.8, Color.STEELBLUE));
         InvalidationListener gradientBinder = new InvalidationListener() {
             boolean updating;
 
             @Override
             public void invalidated(Observable observable) {
+//                System.out.println("observable = " + observable);
                 if (updating) {
                     return;
                 }
@@ -168,14 +166,17 @@ public class LinearGradientEditor extends GradientEditor {
                 updating = false;
             }
         };
-        gradient.addListener(gradientBinder);
         getStops().addListener(gradientBinder);
+        gradient.addListener(gradientBinder);
         proportionalProperty().addListener(gradientBinder);
         cycleMethodProperty().addListener(gradientBinder);
         startX.addListener(gradientBinder);
         startY.addListener(gradientBinder);
         endX.addListener(gradientBinder);
         endY.addListener(gradientBinder);
+        addStop(new Stop(0, Color.ALICEBLUE));
+        addStop(new Stop(.3, Color.SKYBLUE));
+        addStop(new Stop(0.8, Color.STEELBLUE));
     }
 
     public double getStartX() {
@@ -279,7 +280,7 @@ public class LinearGradientEditor extends GradientEditor {
      * @param mx the layout x of mouse pointer in unitBox
      * @param my the layout y of mouse pointer in unitBox
      * @return the offset at the projection of (mx,my) onto the linear gradient
-     * stops line.
+     *         stops line.
      */
     @Override
     public double getOffset(double mx, double my) {

@@ -39,6 +39,8 @@ public class RadialGradientEditor extends GradientEditor {
 
     private final DoubleProperty focusAngle = new SimpleDoubleProperty(90);
 
+    private final ObjectProperty<RadialGradient> gradient = new SimpleObjectProperty<>();
+
     Region rCenter, rFocus, rRadius;
     Line line;
     Ellipse ellipse;
@@ -47,12 +49,9 @@ public class RadialGradientEditor extends GradientEditor {
     StackPane selectedStop;
     //the stop currently being hovered
     StackPane hoverPane;
+    double hoverX, hoverY;
     double ellipseOffset;
-    double mouseX, mouseY;
     boolean showingEndPoints;
-    boolean localChange;
-
-    private final ObjectProperty<RadialGradient> gradient = new SimpleObjectProperty<>();
 
     EventHandler<MouseEvent> mouseHandler = new EventHandler<MouseEvent>() {
 
@@ -60,13 +59,11 @@ public class RadialGradientEditor extends GradientEditor {
         double pressX, pressY;
 
         void moved(MouseEvent event) {
-            if (selectedStop != null || event.getTarget() == hoverPane) {
-                //dont do anything as a stop is pre selected
+            if (selectedStop != null || event.getTarget() == hoverPane || showingEndPoints) {
+                //dont do anything
                 return;
             } else if (hoverPane != null) {
                 //mouse is not on hover pane so hide it
-//                hoverPane.setVisible(false);
-//                hoverPane.setMouseTransparent(true);
                 hoverPane = null;
             }
             //set the ellipse to show the gradient ring corresponding to the mouseHandler point
@@ -91,10 +88,6 @@ public class RadialGradientEditor extends GradientEditor {
                         fy = fy + offset / ellipseOffset * (event.getY() - fy);
                     }
                     p.relocate(fx - p.getWidth() / 2, fy - p.getHeight() / 2);
-                    if (hoverPane == null) {
-                        p.setVisible(true);
-                        p.setMouseTransparent(false);
-                    }
                     hoverPane = p;
                     ellipseOffset = offset;
                     ellipse.setStroke(observableStop.getColor().invert());
@@ -154,8 +147,6 @@ public class RadialGradientEditor extends GradientEditor {
                 ellipse.setCenterY(stopLayoutY(f * ellipseOffset / (1 + f)));
                 ellipse.setRadiusX(getRadius() * ellipseOffset * getWidth());
                 ellipse.setRadiusY(getRadius() * ellipseOffset * getHeight());
-
-//                selectedStop.setVisible(false);
             } else { //drag center
                 hoverPane = null;
                 double ncx = cx + (event.getX() - pressX) / getWidth();
@@ -295,24 +286,25 @@ public class RadialGradientEditor extends GradientEditor {
         setOnScroll((ScrollEvent se) -> {
             //PENDING: this causes negative radius if you scroll down too much. check if we need any fix
             setRadius(getRadius() + se.getDeltaY() / getHeight() / 2);
+            se.consume();
         });
 
         showEndPoints(false);
 //        rCenter.layoutXProperty().bind(centerX.multiply(widthProperty()));
 //        rCenter.layoutYProperty().bind(centerY.multiply(heightProperty()));
 
-        //FIXME: remove these ugly hacks later
+        //FIXME: Probably use reactfx to detect period of inactivity
         setOnMouseExited(e -> {
             ellipse.setOpacity(0);
         });
         setOnMouseEntered(ev -> ellipse.setOpacity(1));
-        
-        addStop(new Stop(0, Color.BLACK));
-        addStop(new Stop(0.5, Color.ALICEBLUE));
-        addStop(new Stop(1, Color.web("001a80")));
-        
+
+//        addStop(new Stop(0, Color.BLACK));
+//        addStop(new Stop(0.5, Color.ALICEBLUE));
+//        addStop(new Stop(1, Color.web("001a80")));
     }
 
+    //<editor-fold defaultstate="collapsed" desc="property getter/setter">
     public double getCenterX() {
         return centerX.get();
     }
@@ -384,6 +376,7 @@ public class RadialGradientEditor extends GradientEditor {
     public ObjectProperty<RadialGradient> gradientProperty() {
         return gradient;
     }
+    //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="stopLayout">
     @Override
@@ -418,7 +411,8 @@ public class RadialGradientEditor extends GradientEditor {
     protected void layoutChildren() {
         super.layoutChildren();
         //TODO: this assumes proportional gradient. Rework it to support absolute layout
-        rCenter.relocate(getCenterX() * getWidth() - rCenter.getWidth() / 2,
+        rCenter.relocate(
+                getCenterX() * getWidth() - rCenter.getWidth() / 2,
                 getCenterY() * getHeight() - rCenter.getHeight() / 2);
         rFocus.relocate(
                 stopLayoutX(0) - rFocus.getWidth() / 2,
@@ -447,15 +441,15 @@ public class RadialGradientEditor extends GradientEditor {
             }
         }
     }
-
     //<editor-fold defaultstate="collapsed" desc="getOffset">
+
     /**
      *
      * @param mx mouseHandler x coordinate in local bounds of unitBox
      * @param my mouseHandler y coordinate in local bounds of unitBox
      * @return a double with fractional part that indicates the Stop offset and
-     * integer part that represents the ring no if the pattern repeated or
-     * reflected
+     *         integer part that represents the ring no if the pattern repeated
+     *         or reflected
      */
     private double getMouseOffset(double mx, double my) {
         double fx = stopLayoutX(0); //focus x
@@ -521,9 +515,14 @@ public class RadialGradientEditor extends GradientEditor {
 //</editor-fold>
 
     public void showEndPoints(boolean activate) {
+        getStopSelection().clearSelection();
+        selectedStop = null;
+        hoverPane = null;
         for (StackPane p : stopMap.keySet()) {
-            p.setDisable(activate);
+            p.setVisible(!activate);
         }
+        ellipse.setVisible(!activate);
+        add.setVisible(!activate);
         rCenter.toFront();
         rCenter.setVisible(activate);
         rCenter.setMouseTransparent(!activate);
@@ -533,30 +532,16 @@ public class RadialGradientEditor extends GradientEditor {
         rRadius.toFront();
         rRadius.setVisible(activate);
         rRadius.setMouseTransparent(!activate);
-
-        line.setDisable(activate);
     }
 
     public void selectStop(StackPane p) {
         if (selectedStop == p) {
-            //deselect the stop
-//            selectedStop.setVisible(false);
-//            selectedStop.setMouseTransparent(true);
             selectedStop = null;
-            ellipseOffset = -1;
         } else {
-            if (selectedStop != null) {
-//                selectedStop.setVisible(false);
-//                selectedStop.setMouseTransparent(true);
-            }
             selectedStop = p;
             if (p == null) {
-//                listView.getSelectionModel().clearSelection();
                 return;
             }
-            selectedStop.setVisible(true);
-            selectedStop.setMouseTransparent(false);
-//            listView.getSelectionModel().select(stopMap.get(selectedStop));
         }
     }
 

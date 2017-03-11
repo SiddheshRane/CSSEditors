@@ -5,10 +5,6 @@
  */
 package csseditors;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -18,20 +14,23 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.control.ColorPicker;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.RadialGradient;
 import javafx.scene.paint.Stop;
 import org.controlsfx.control.PopOver;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.util.Duration;
 
 /**
  * A container for layout of visual nodes representing
@@ -43,16 +42,16 @@ import org.controlsfx.control.PopOver;
  */
 public abstract class GradientEditor extends Pane {
 
+    private ObservableList<Stop> stops;
+    private final ObjectProperty<CycleMethod> cycleMethod = new SimpleObjectProperty<>(CycleMethod.NO_CYCLE);
+    private final BooleanProperty proportional = new SimpleBooleanProperty(true);
     //TODO: This should'nt be here. Find a more asthetically pleasing place for this
     public static final CornerRadii ROUND = new CornerRadii(50, true);
     private static final Comparator<Stop> STOP_COMPARATOR = Comparator.comparingDouble(Stop::getOffset);
     //maps Stops to their visual nodes
     protected HashMap<StackPane, Stop> stopMap;
-    private ObservableList<Stop> stops;
     //PENDING: Implement a stop selection mechanism
-    SelectionModel<Stop> stopSelection;
-    private final ObjectProperty<CycleMethod> cycleMethod = new SimpleObjectProperty<>(CycleMethod.NO_CYCLE);
-    private final BooleanProperty proportional = new SimpleBooleanProperty(true);
+    private SelectionModel<Stop> stopSelection;
     private final ListChangeListener<Stop> stopsListener;
 
     public GradientEditor() {
@@ -63,6 +62,7 @@ public abstract class GradientEditor extends Pane {
 
             @Override
             public void onChanged(ListChangeListener.Change<? extends Stop> c) {
+                System.out.println("c = " + c);
                 if (sorting) {
                     return;
                 }
@@ -114,7 +114,7 @@ public abstract class GradientEditor extends Pane {
                 }
                 if (sort) {
                     sorting = true;
-                    stops.sort(STOP_COMPARATOR);
+//                    stops.sort(STOP_COMPARATOR);
                     sorting = false;
                 }
             }
@@ -123,6 +123,9 @@ public abstract class GradientEditor extends Pane {
         this.stopSelection = new SingleSelectionModel<Stop>() {
             @Override
             protected Stop getModelItem(int index) {
+                if (index < 0) {
+                    return null;
+                }
                 return stops.get(index);
             }
 
@@ -130,7 +133,7 @@ public abstract class GradientEditor extends Pane {
             protected int getItemCount() {
                 return stops.size();
             }
-			
+
         };
         ClickFilter.attach(this);
     }
@@ -144,7 +147,7 @@ public abstract class GradientEditor extends Pane {
         cycleMethod.set(value);
     }
 
-    public ObjectProperty<CycleMethod> cycleMethodProperty() {
+    public final ObjectProperty<CycleMethod> cycleMethodProperty() {
         return cycleMethod;
     }
 
@@ -156,7 +159,7 @@ public abstract class GradientEditor extends Pane {
         proportional.set(value);
     }
 
-    public BooleanProperty proportionalProperty() {
+    public final BooleanProperty proportionalProperty() {
         return proportional;
     }
     //</editor-fold>
@@ -176,29 +179,50 @@ public abstract class GradientEditor extends Pane {
             stopMark.getStyleClass().add("stop");
             stopMark.setBackground(new Background(new BackgroundFill(addedStop.getColor(), ROUND, Insets.EMPTY)));
             //TODO: Color picker consumes all input events.ColorPicker buggy on linux
-//                            final ColorPicker colorPicker = new ColorPicker(s.getColor());
-//                            colorPicker.valueProperty().addListener((ob, old, nw) -> updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw)));
-//                            stopMark.getChildren().add(colorPicker);
-            stopMark.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+//          final ColorPicker colorPicker = new ColorPicker(s.getColor());
+//          colorPicker.valueProperty().addListener((ob, old, nw) -> updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw)));
+//          stopMark.getChildren().add(colorPicker);
+            stopMark.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                    new EventHandler<MouseEvent>() {
                 PopOver pop;
                 private ColorRectPane colorRectPane;
 
                 {
-                    pop = new PopOver();
-                    pop.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
                     colorRectPane = new ColorRectPane();
                     colorRectPane.setCustomColor(addedStop.getColor());
-                    StackPane stackPane = new StackPane(colorRectPane);
-                    stackPane.setPadding(new Insets(7));
-                    pop.setContentNode(stackPane);
-                    pop.setAutoHide(true);
                     colorRectPane.customColorProperty().addListener((ob, ol, nw) -> {
                         updateStop(stopMark, new Stop(stopMap.get(stopMark).getOffset(), nw));
                     });
+                    colorRectPane.addEventHandler(MouseEvent.MOUSE_DRAGGED, me -> me.consume());
+
+                    final StackPane cross = new StackPane();
+                    cross.getStyleClass().add("cross");
+
+                    Button delete = new Button("Delete Stop", cross);
+                    delete.setOnAction(ae -> {
+                        pop.hide(Duration.millis(300));
+                        deleteStop(stopMark);
+                    });
+
+                    VBox vbox = new VBox(delete, colorRectPane);
+                    vbox.setSpacing(5);
+                    vbox.setAlignment(Pos.CENTER);
+                    vbox.setPadding(new Insets(7));
+                    pop = new PopOver(vbox);
+                    pop.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+                    pop.setAutoHide(true);
                 }
 
                 @Override
                 public void handle(MouseEvent event) {
+                    if (pop.isShowing()) {
+                        pop.hide();
+                        if (getStopSelection().getSelectedItem() == stopMap.get(stopMark)) {
+                            getStopSelection().clearSelection();
+                        }
+                        return ;
+                    }
+                    getStopSelection().select(stopMap.get(stopMark));
                     colorRectPane.setCustomColor(stopMap.get(stopMark).getColor());
                     pop.show(stopMark);
                     pop.requestFocus();
@@ -236,9 +260,7 @@ public abstract class GradientEditor extends Pane {
     }
 
     protected void layoutStops() {
-        stopMap.forEach((StackPane t, Stop u) -> {
-            layoutStop(t, u);
-        });
+        stopMap.forEach(this::layoutStop);
     }
 
     public abstract double stopLayoutX(double t);
@@ -253,8 +275,12 @@ public abstract class GradientEditor extends Pane {
      * @param mx the layout x of mouse pointer in unitBox
      * @param my the layout y of mouse pointer in unitBox
      * @return the offset at the projection of ( mx , my ) onto the gradient
-     * stops line.
+     *         stops line.
      */
     public abstract double getOffset(double mx, double my);
+
+    public SelectionModel<Stop> getStopSelection() {
+        return stopSelection;
+    }
 
 }
