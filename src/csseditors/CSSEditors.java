@@ -57,7 +57,7 @@ public class CSSEditors extends Application {
         /*
          uncomment any one to play its demo
          */
-        backgroundFillEditorTest(primaryStage);
+//        backgroundFillEditorTest(primaryStage);
 //        regionPropertiesTest(primaryStage);
 //        colorRectPaneTest(primaryStage);
 //        colorRectPaneTest2(primaryStage);
@@ -243,10 +243,10 @@ public class CSSEditors extends Application {
         AnchorPane pane = new AnchorPane();
         RadialGradientEditor radialGradientEditor = new RadialGradientEditor();
         pane.getChildren().add(radialGradientEditor);
-        AnchorPane.setLeftAnchor(radialGradientEditor, 25d);
-        AnchorPane.setRightAnchor(radialGradientEditor, 25d);
-        AnchorPane.setTopAnchor(radialGradientEditor, 25d);
-        AnchorPane.setBottomAnchor(radialGradientEditor, 25d);
+        AnchorPane.setLeftAnchor(radialGradientEditor, 0d);
+        AnchorPane.setRightAnchor(radialGradientEditor, 0d);
+        AnchorPane.setTopAnchor(radialGradientEditor, 0d);
+        AnchorPane.setBottomAnchor(radialGradientEditor, 0d);
 
         ComboBox<CycleMethod> cycleMethodBox = new ComboBox<>(FXCollections.observableArrayList(CycleMethod.values()));
         cycleMethodBox.valueProperty().bindBidirectional(radialGradientEditor.cycleMethodProperty());
@@ -266,9 +266,11 @@ public class CSSEditors extends Application {
         listView.setPrefHeight(100);
 
         VBox vbox = new VBox(pane, cycleMethodBox, focus, focusAngle, slider, radius, listView);
+        vbox.setSpacing(10);
+        vbox.setPadding(new Insets(10));
         VBox.setVgrow(pane, Priority.ALWAYS);
 
-        radialGradientEditor.setGradient(RadialGradient.valueOf("radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue)"));
+//        radialGradientEditor.setGradient(RadialGradient.valueOf("radial-gradient(center 50% 50%,radius 50%, springgreen, steelblue)"));
         radialGradientEditor.backgroundProperty().bind(new ObjectBinding<Background>() {
             {
                 super.bind(radialGradientEditor.gradientProperty());

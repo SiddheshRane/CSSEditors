@@ -299,9 +299,9 @@ public class RadialGradientEditor extends GradientEditor {
         });
         setOnMouseEntered(ev -> ellipse.setOpacity(1));
 
-//        addStop(new Stop(0, Color.BLACK));
-//        addStop(new Stop(0.5, Color.ALICEBLUE));
-//        addStop(new Stop(1, Color.web("001a80")));
+        addStop(new Stop(0, Color.BLACK));
+        addStop(new Stop(0.5, Color.ALICEBLUE));
+        addStop(new Stop(1, Color.web("001a80")));
     }
 
     //<editor-fold defaultstate="collapsed" desc="property getter/setter">
